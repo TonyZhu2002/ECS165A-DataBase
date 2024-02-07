@@ -10,6 +10,10 @@ class Page:
     def has_capacity(self):
         return self.num_records < MAX_RECORD_PER_PAGE
 
+    '''
+    # Appends the record to the page
+    # :param value: int   #The value to be added to the page
+    '''
     def write(self, value):
         if self.has_capacity:
             begin = self.num_records * 4   

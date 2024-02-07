@@ -60,10 +60,10 @@ class Table:
     
     '''
     # find a page based on the column index
-    # :param col_index: int: Index of the column
-    # :param is_base_page: bool: True if we want to find the base page, False if we want to find the tail page
+    # :param col_index: int     #The index of the column
+    # :param is_base_page: bool #True if we want to find the base page, False if we want to find the tail page
     '''    
-    def __find_page(self, col_index, is_base_page = True)->Page:
+    def __find_page(self, col_index, is_base_page = True) -> Page:
         range_index = (col_index * 2) // MAX_PAGE_RANGE
         page_index = (col_index * 2) % MAX_PAGE_RANGE
         return self.page_list[range_index][page_index] if is_base_page else self.page_list[range_index][page_index + 1]       
