@@ -26,37 +26,50 @@ class Table:
     def __init__(self, name, num_columns, key):
         self.name = name
         self.key = key
-        self.num_columns = num_columns
+        self.num_columns = num_columns + 4
         self.page_list = []
         self.index = Index(self)
         
         # Map the meta pages
-        INDIRECTION_COLUMN += num_columns
-        RID_COLUMN += num_columns
-        TIMESTAMP_COLUMN += num_columns
-        SCHEMA_ENCODING_COLUMN += num_columns
+        INDIRECTION_COLUMN += 4
+        RID_COLUMN += 4
+        TIMESTAMP_COLUMN += 4
+        SCHEMA_ENCODING_COLUMN += 4
         
         # Every column should have a base page and a tail page
-        num_page = 2 * (num_columns+4)
+        num_page = 2 * num_columns
         
         '''
         # We initialize the page list with the number of pages we need
         # The page list will look like this: [[base_page1, tail_page1, base_page2, tail_page2, ...], [base_page1, tail_page1, base_page2, tail_page2, ...], ...]
         '''
         page_range_list = []
-        count = 0
+        page_count = 0
+        page_range_count = 0
         for i in range(num_page):
-            if (count < MAX_PAGE_RANGE):
-                page_range_list.append(Page())
-                count += 1
+            if (page_count < MAX_PAGE_RANGE):
+                page_range_list.append(Page(page_range_count, page_count))
+                page_count += 1
             else:
                 self.page_list.append(copy.deepcopy(page_range_list))
                 page_range_list.clear()
-                count = 0
+                page_range_count += 1
+                page_count = 0
         
-        if (count > 0):
+        if (page_count > 0):
             self.page_list.append(copy.deepcopy(page_range_list))
             page_range_list.clear()       
+    
+    '''
+    # Write a column to the base page
+    # :param record: Record     #The record to be written to the base page
+    '''
+    def write_base_record(self, record: Record):
+        column = record.columns
+        key = record.key
+        for i in range(len(column)):
+            address = self.__find_page(i, True).write(column[i])
+            self.index[i][key] = address
     
     '''
     # find a page based on the column index

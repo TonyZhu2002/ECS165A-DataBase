@@ -1,5 +1,6 @@
 from lstore.table import Table, Record
 from lstore.index import Index
+from lstore.config import *
 from time import time
 
 
@@ -10,7 +11,7 @@ class Query:
     Queries that succeed should return the result or True
     Any query that crashes (due to exceptions) should return False
     """
-    def __init__(self, table):
+    def __init__(self, table: Table):
         self.table = table
         pass
 
@@ -36,11 +37,17 @@ class Query:
         
         if self.table.index.indices[key_index].has_key(key):
             raise ValueError(f'Key {key} already exists!')
-         
-        schema_encoding = '0' * self.table.num_columns
+        
+        # Setup the metadata
+        indirection = '0'
+        rid = CURRENT_RID
+        CURRENT_RID += 1
         time_stamp = int(time())
-        raise NotImplementedError('Implement this')
-
+        schema_encoding = '0' * self.table.num_columns
+        
+        data = [indirection, rid, time_stamp, schema_encoding] + list(columns)
+        record = Record(rid, key, data)
+        self.table.write_base_record(record)
     
     """
     # Read matching record with specified search key
