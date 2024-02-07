@@ -18,10 +18,10 @@ class Page:
     '''
     def write(self, value) -> list:
         if self.has_capacity:
-            begin = self.num_records * 4   
-            self.data[begin : begin + 4] = struct.pack("i", value)   
+            begin = self.num_records * 4
+            self.data[begin : begin + 4] = struct.pack("i", int(value))   
             self.num_records += 1
-            return [self.page_range_index, self.page_index, self.num_records]
+            return [self.page_range_index, self.page_index, self.num_records - 1]
         else: 
             raise MemoryError("Page is full")     
 

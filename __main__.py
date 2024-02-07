@@ -13,8 +13,11 @@ insert_time_0 = process_time()
 for i in range(0, 10000):
     query.insert(906659671 + i, 93, 0, 0, 0)
     keys.append(906659671 + i)
+    print('This is ith iteration', i)
 insert_time_1 = process_time()
+print("Inserting 10k records took:  \t\t\t", insert_time_1 - insert_time_0)
 
+'''
 print("Inserting 10k records took:  \t\t\t", insert_time_1 - insert_time_0)
 
 # Measuring update Performance
@@ -54,3 +57,4 @@ for i in range(0, 10000):
     query.delete(906659671 + i)
 delete_time_1 = process_time()
 print("Deleting 10k records took:  \t\t\t", delete_time_1 - delete_time_0)
+''' 

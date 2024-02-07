@@ -4,12 +4,6 @@ from lstore.config import *
 from time import time
 import copy
 
-INDIRECTION_COLUMN = 0
-RID_COLUMN = 1
-TIMESTAMP_COLUMN = 2
-SCHEMA_ENCODING_COLUMN = 3
-
-
 class Record:
 
     def __init__(self, rid, key, columns):
@@ -29,15 +23,10 @@ class Table:
         self.num_columns = num_columns + 4
         self.page_list = []
         self.index = Index(self)
-        
-        # Map the meta pages
-        INDIRECTION_COLUMN += 4
-        RID_COLUMN += 4
-        TIMESTAMP_COLUMN += 4
-        SCHEMA_ENCODING_COLUMN += 4
+        self.current_rid = 10000
         
         # Every column should have a base page and a tail page
-        num_page = 2 * num_columns
+        num_page = 2 * self.num_columns
         
         '''
         # We initialize the page list with the number of pages we need
@@ -49,16 +38,23 @@ class Table:
         for i in range(num_page):
             if (page_count < MAX_PAGE_RANGE):
                 page_range_list.append(Page(page_range_count, page_count))
-                page_count += 1
             else:
                 self.page_list.append(copy.deepcopy(page_range_list))
-                page_range_list.clear()
-                page_range_count += 1
                 page_count = 0
+                page_range_list.clear()
+                page_range_list.append(Page(page_range_count, page_count))
+                page_range_count += 1
+            page_count += 1
+                
         
         if (page_count > 0):
             self.page_list.append(copy.deepcopy(page_range_list))
-            page_range_list.clear()       
+            page_range_list.clear()
+        print('Done initializing page_list')
+            
+        for i in range(self.num_columns):
+            if (i != self.key):
+                self.index.create_index(i)
     
     '''
     # Write a column to the base page
@@ -66,10 +62,9 @@ class Table:
     '''
     def write_base_record(self, record: Record):
         column = record.columns
-        key = record.key
         for i in range(len(column)):
             address = self.__find_page(i, True).write(column[i])
-            self.index[i][key] = address
+            self.index.indices[i][record.key] = address
     
     '''
     # find a page based on the column index

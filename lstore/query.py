@@ -40,12 +40,12 @@ class Query:
         
         # Setup the metadata
         indirection = '0'
-        rid = CURRENT_RID
-        CURRENT_RID += 1
+        rid = self.table.current_rid
+        self.table.current_rid += 1
         time_stamp = int(time())
         schema_encoding = '0' * self.table.num_columns
         
-        data = [indirection, rid, time_stamp, schema_encoding] + list(columns)
+        data = list(columns) + [indirection, rid, time_stamp, schema_encoding]
         record = Record(rid, key, data)
         self.table.write_base_record(record)
     
