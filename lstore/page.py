@@ -1,3 +1,4 @@
+import struct
 
 class Page:
 
@@ -6,9 +7,13 @@ class Page:
         self.data = bytearray(4096)
 
     def has_capacity(self):
-        pass
+        return self.num_records < 1024
 
     def write(self, value):
-        self.num_records += 1
-        pass
+        if self.has_capacity:
+            begin = self.num_records * 4   
+            self.data[begin : begin + 4] = struct.pack("i", value)   
+            self.num_records += 1
+        else: 
+            raise MemoryError("Page is full")     
 
