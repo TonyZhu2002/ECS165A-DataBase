@@ -18,7 +18,6 @@ class Record:
         self.columns = columns
 
 class Table:
-
     """
     :param name: string         #Table name
     :param num_columns: int     #Number of Columns: all columns are integer
@@ -38,7 +37,7 @@ class Table:
         SCHEMA_ENCODING_COLUMN += num_columns
         
         # Every column should have a base page and a tail page
-        num_page = 2 * (num_columns + 4)
+        num_page = 2 * (num_columns+4)
         
         '''
         # We initialize the page list with the number of pages we need
@@ -57,8 +56,7 @@ class Table:
         
         if (count > 0):
             self.page_list.append(copy.deepcopy(page_range_list))
-            page_range_list.clear()
-        
+            page_range_list.clear()       
     
     '''
     # find a page based on the column index

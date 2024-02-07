@@ -26,13 +26,11 @@ class Database():
         self.tables[name] = table
         return table
 
-    
     """
     # Deletes the specified table
     """
     def drop_table(self, name):
         pass
-
     
     """
     # Returns table with the passed name

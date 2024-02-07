@@ -36,8 +36,7 @@ class Query:
         
         if self.table.index.indices[key_index].has_key(key):
             raise ValueError(f'Key {key} already exists!')
-        
-        
+         
         schema_encoding = '0' * self.table.num_columns
         time_stamp = int(time())
         raise NotImplementedError('Implement this')
