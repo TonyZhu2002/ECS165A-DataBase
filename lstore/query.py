@@ -1,5 +1,6 @@
 from lstore.table import Table, Record
 from lstore.index import Index
+from time import time
 
 
 class Query:
@@ -30,8 +31,16 @@ class Query:
     # Returns False if insert fails for whatever reason
     """
     def insert(self, *columns):
+        key_index = self.table.key
+        key = columns[key_index]
+        
+        if self.table.index.indices[key_index].has_key(key):
+            raise ValueError(f'Key {key} already exists!')
+        
+        
         schema_encoding = '0' * self.table.num_columns
-        pass
+        time_stamp = int(time())
+        raise NotImplementedError('Implement this')
 
     
     """
