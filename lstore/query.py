@@ -23,6 +23,12 @@ class Query:
     # Return False if record doesn't exist or is locked due to 2PL
     """
     def delete(self, primary_key):
+        rid = self.table.current_rid
+        if rid != None:
+            del rid
+            return True
+        if rid == None or rid == primary_key:
+            return False
         pass
     
     
