@@ -51,7 +51,8 @@ class Table:
             self.page_list.append(copy.deepcopy(page_range_list))
             page_range_list.clear()
         print('Done initializing page_list')
-            
+        
+        # Create index for the every column 
         for i in range(self.num_columns):
             if (i != self.key):
                 self.index.create_index(i)
