@@ -23,5 +23,5 @@ class Page:
             self.num_records += 1
             return [self.page_range_index, self.page_index, self.num_records - 1]
         else: 
-            raise MemoryError("Page is full")     
+            raise MemoryError("This Page is full")     
 

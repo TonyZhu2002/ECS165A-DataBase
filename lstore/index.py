@@ -17,14 +17,23 @@ class Index:
     """
 
     def locate(self, column, value):
-        pass
+        index = self.indices[column]
+        if index is not None:
+            return index.get(value, [])
+        else:
+            return []
 
     """
     # Returns the RIDs of all records with values in column "column" between "begin" and "end"
     """
 
     def locate_range(self, begin, end, column):
-        pass
+        index = self.indices[column]
+        if index is not None:
+            # Fetch a range of keys using B-Tree's efficient range search capability
+            return [rid for key, rid in index.items(begin, end)]
+        else:
+            return []
 
     """
     # optional: Create index on specific column
