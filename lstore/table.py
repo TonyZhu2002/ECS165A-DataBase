@@ -21,41 +21,30 @@ class Table:
         self.name = name
         self.key = key
         self.num_columns = num_columns + 4
-        self.page_list = []
+        self.page_list = [[]]
         self.index = Index(self)
         self.current_rid = 10000
-        
+        self.allocate_count = 0
         # Every column should have a base page and a tail page
-        num_page = 2 * self.num_columns
         
         '''
         # We initialize the page list with the number of pages we need
         # The page list will look like this: [[base_page1, tail_page1, base_page2, tail_page2, ...], [base_page1, tail_page1, base_page2, tail_page2, ...], ...]
         '''
-        page_range_list = []
-        page_count = 0
-        page_range_count = 0
-        for i in range(num_page):
-            if (page_count < MAX_PAGE_RANGE):
-                page_range_list.append(Page(page_range_count, page_count))
-            else:
-                self.page_list.append(copy.deepcopy(page_range_list))
-                page_count = 0
-                page_range_list.clear()
-                page_range_list.append(Page(page_range_count, page_count))
-                page_range_count += 1
-            page_count += 1
-                
-        
-        if (page_count > 0):
-            self.page_list.append(copy.deepcopy(page_range_list))
-            page_range_list.clear()
+        self.__create_page(2 * self.num_columns)
         print('Done initializing page_list')
         
         # Create index for the every column 
         for i in range(self.num_columns):
             if (i != self.key):
                 self.index.create_index(i)
+                
+    def __create_page(self, page_count):
+        for i in range(page_count):
+            if len(self.page_list[-1]) == MAX_PAGE_RANGE:
+                self.page_list.append([])
+            else:
+                self.page_list[-1].append(Page(len(self.page_list) - 1, len(self.page_list[-1])))
     
     '''
     # Write a column to the base page
@@ -86,9 +75,16 @@ class Table:
     # :param is_base_page: bool #True if we want to find the base page, False if we want to find the tail page
     '''    
     def __find_page(self, col_index, is_base_page = True) -> Page:
-        range_index = (col_index * 2) // MAX_PAGE_RANGE
-        page_index = (col_index * 2) % MAX_PAGE_RANGE
-        return self.page_list[range_index][page_index] if is_base_page else self.page_list[range_index][page_index + 1]       
+        if (self.allocate_count == 0):
+            range_index = (col_index * 2) // MAX_PAGE_RANGE
+            page_index = (col_index * 2) % MAX_PAGE_RANGE
+            return self.page_list[range_index][page_index] if is_base_page else self.page_list[range_index][page_index + 1]
+        elif (is_base_page) == False:
+            raise Exception("Tail page not found, check your arguments")
+        else:
+            raise NotImplementedError("Page allocation not implemented")
+            
+                 
                        
 
     def __merge(self):
