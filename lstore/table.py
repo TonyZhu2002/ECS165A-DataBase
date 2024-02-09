@@ -68,6 +68,19 @@ class Table:
             self.index.indices[i][record.key] = address
     
     '''
+    # Write a column to the tail page (Further Test Needed)
+    # :param record: Record     #The record to be written to the tail page
+    # :param primary_key        #The primary key of the base record
+    '''
+    def write_tail_record(self, primary_key, record: Record):
+        column = record.columns
+        for i in range(len(column)):
+            address = self.__find_page(i, False).write(column[i])
+            self.index.indices[i][record.key] = address
+        # Update Indirection Column of Base Record
+        self.index.indices[4][primary_key] = column[4]
+    
+    '''
     # find a page based on the column index
     # :param col_index: int     #The index of the column
     # :param is_base_page: bool #True if we want to find the base page, False if we want to find the tail page
