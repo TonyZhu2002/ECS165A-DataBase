@@ -88,6 +88,25 @@ class Query:
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
     def update(self, primary_key, *columns):
+        key_index = self.table.key
+        key = columns[key_index]
+        
+        if self.table.index.indices[key_index].has_key(key):
+            raise ValueError(f'Key {key} already exists!')
+        
+        # Setup the metadata
+        indirection = self.table.index.indices[4][primary_key]
+        rid = self.table.current_rid
+        self.table.current_rid += 1
+        time_stamp = int(time())
+        schema_encoding = '0' * self.table.num_columns
+        for i in range(self.table.num_columns):
+            if(self.table.index.indices[i][primary_key] != key[i]):
+                schema_encoding[i] = '1'
+        
+        data = list(columns) + [indirection, rid, time_stamp, schema_encoding]
+        record = Record(rid, key, data)
+        self.table.write_base_record(record)
         pass
 
     
