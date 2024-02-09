@@ -94,7 +94,7 @@ class Query:
         if self.table.index.indices[key_index].has_key(key):
             raise ValueError(f'Key {key} already exists!')
         
-        # Setup the metadata
+        # Setup data for tail record
         indirection = self.table.index.indices[4][primary_key]
         rid = self.table.current_rid
         self.table.current_rid += 1
@@ -106,7 +106,7 @@ class Query:
         
         data = list(columns) + [indirection, rid, time_stamp, schema_encoding]
         record = Record(rid, key, data)
-        self.table.write_base_record(record)
+        self.table.write_tail_record(record)
         pass
 
     
