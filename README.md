@@ -1,4 +1,4 @@
-# -165a-winter-2024
+# ECS165A Project
 
 ## Requirement:
 * Python environment
