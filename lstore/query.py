@@ -99,7 +99,7 @@ class Query:
         rid = self.table.current_rid
         self.table.current_rid += 1
         time_stamp = int(time())
-        schema_encoding = self.table.index.indices[7][primary_key]
+        schema_encoding = '0' * self.table.num_columns
         for i in range(self.table.num_columns):
             if(self.table.index.indices[i][primary_key] != key[i]):
                 schema_encoding[i] = '1'
