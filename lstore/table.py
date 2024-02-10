@@ -88,16 +88,6 @@ class Table:
                 self.index.indices[i][record.key] = address
         
     '''
-    # find the newest page based on the column index
-    # :param col_index: int     #The index of the column
-    # :param is_base_page: bool #True if we want to find the base page, False if we want to find the tail page
-    # :return: Page             #The page that we want to find
-    '''    
-    def __find_page(self, col_index, is_base_page = True) -> Page:
-        page_range = self.base_page_range_dict[col_index][-1] if is_base_page else self.tail_page_range_dict[col_index][-1]
-        return page_range.get_latest_page()
-        
-    '''
     # Create new pages
     # :param page_count: int     #The number of pages to be created
     # :param is_base_page: bool  #True if we want to create base page, False if we want to create tail page

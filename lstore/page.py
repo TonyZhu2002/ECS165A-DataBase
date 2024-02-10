@@ -21,6 +21,8 @@ class Page:
     '''
     # Appends the record to the page
     # :param value: int     #The value to be added to the page
+    # :return: list         #The location of the record in the page
+    # return None if the column is None
     '''
     def write(self, value) -> list:
         # If we do not have any value for this column of the record, we will return None
