@@ -14,7 +14,27 @@ class Query:
     def __init__(self, table: Table):
         self.table = table
         pass
-
+    
+    '''
+    # Internal Method
+    # Modify the value at the given address in a page
+    # :param address: list     #The address of the value to be modified
+    # :param value: int        #The value to be modified
+    '''
+    def modify_page_value(self, address: list, value):
+        page = self.table.page_list[address[0]][address[1]]
+        page.modify_value(value, address[2])
+        pass
+    
+    '''
+    # Internal Method
+    # Get the value at the given address in a page
+    # :param address: list     #The address of the value to be retrieved
+    # :return: int             #The value at the given address
+    '''
+    def get_page_value(self, address: list) -> int:
+        page = self.table.page_list[address[0]][address[1]]
+        return page.get_value(address[2])
     
     """
     # internal Method

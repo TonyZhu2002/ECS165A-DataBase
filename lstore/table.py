@@ -34,7 +34,6 @@ class Table:
             if (i != self.key):
                 self.index.create_index(i)
                 
-    
     '''
     # Write a column to the base page
     # :param record: Record     #The record to be written to the base page
@@ -63,11 +62,11 @@ class Table:
         # Update Indirection Column of Base Record
         self.index.indices[4][primary_key] = column[4]
         
-    
     '''
     # find the newest page based on the column index
     # :param col_index: int     #The index of the column
     # :param is_base_page: bool #True if we want to find the base page, False if we want to find the tail page
+    # :return: Page             #The page that we want to find
     '''    
     def __find_page(self, col_index, is_base_page = True) -> Page:
         if (self.allocate_count == 0):
@@ -85,30 +84,30 @@ class Table:
     '''
     # Create new pages
     # :param page_count: int     #The number of pages to be created
-    '''
-        
+    '''     
     def __create_page(self, page_count):
         for i in range(page_count):
             if len(self.page_list[-1]) == MAX_PAGE_RANGE:
                 self.page_list.append([])
             self.page_list[-1].append(Page(len(self.page_list) - 1, len(self.page_list[-1])))
     
-    def __check_page_full(self):
+    '''
+    # Check if the base pages are full
+    # :return: bool     #True if the base pages are full, False otherwise
+    '''
+    def __check_page_full(self) -> bool:
         if (self.allocate_count == 0):
             return not self.page_list[-1][-2].has_capacity()
         else:
             return not self.page_list[-1][-1].has_capacity()
+        
     '''
     Allocate new pages based on the number of columns
     '''
     def __allocate_base_page(self):
         self.allocate_count += 1
         self.__create_page(self.num_columns)
-        print('page_list_length:', len(self.page_list))
-        print('last_page_length:', len(self.page_list[-1]))
-        print('num_record_in_last_page:', self.page_list[1][10].num_records)
                                
-
     def __merge(self):
         print("merge is happening")
         pass

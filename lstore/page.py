@@ -23,5 +23,22 @@ class Page:
             self.num_records += 1
             return [self.page_range_index, self.page_index, self.num_records - 1]
         else: 
-            raise MemoryError("This Page is full")     
-
+            raise MemoryError("This Page is full")
+    
+    '''
+    # Modify the value at the given index
+    # :param value: int     #The value to be modified
+    # :param index: int     #The index of the value to be modified
+    '''    
+    def modify_value(self, value, index):
+        begin = index * 4
+        self.data[begin : begin + 4] = struct.pack("i", int(value))
+        
+    '''
+    # Get the value at the given index
+    # :param index: int     #The index of the value to be retrieved
+    # :return: int          #The value at the given index
+    '''  
+    def get_value(self, index) -> int:
+        begin = index * 4
+        return struct.unpack("i", self.data[begin : begin + 4])[0]
