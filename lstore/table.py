@@ -21,13 +21,17 @@ class Table:
         self.name = name
         self.key = key
         self.num_columns = num_columns + 4
-        self.page_list = [[]]
+        self.base_page_dict = {}
+        self.tail_page_dict = {}
+        self.page_count_dict = {}
         self.index = Index(self)
         self.current_rid = 10000
-        self.allocate_count = 0
+
 
         # Initialize the page list
-        self.__create_page(2 * self.num_columns)
+        for i in range(self.num_columns):
+            self.__create_page(i, True)
+            self.__create_page(i, False)
         
         # Create index for the every column 
         for i in range(self.num_columns):
@@ -39,28 +43,35 @@ class Table:
     # :param record: Record     #The record to be written to the base page
     '''
     def write_base_record(self, record: Record):
-        if self.__check_page_full():
-            self.__allocate_base_page()
-        column = record.columns
-        for i in range(len(column)):
-            address = self.__find_page(i, True).write(column[i])
-            self.index.indices[i][record.key] = address
+        columns = record.columns
+        for i in range(len(columns)):
+            curr_page = self.__find_page(i, True)
+            
+            # If the page is full, create a new page
+            if (not curr_page.has_capacity()):
+                self.__create_page(i, True)
+                curr_page = self.__find_page(i, True)
+            address = curr_page.write(columns[i])
+            if (address != None):
+                self.index.indices[i][record.key] = address
     
     '''
     # Write a column to the tail page (Further Test Needed)
     # :param record: Record     #The record to be written to the tail page
     # :param primary_key        #The primary key of the base record
     '''
-    def write_tail_record(self, primary_key, record: Record):
-        if self.__check_page_full():
-            self.__allocate_base_page()
-        column = record.columns
-        for i in range(len(column)):
-            address = self.__find_page(i, False).write(column[i])
-            self.index.indices[i][record.key] = address
+    def write_tail_record(self, record: Record):
+        columns = record.columns
+        for i in range(len(columns)):
+            curr_page = self.__find_page(i, False)
             
-        # Update Indirection Column of Base Record
-        self.index.indices[4][primary_key] = column[4]
+            # If the page is full, create a new page
+            if (not curr_page.has_capacity()):
+                self.__create_page(i, False)
+                curr_page = self.__find_page(i, False)
+            address = curr_page.write(columns[i])
+            if (address != None):
+                self.index.indices[i][record.key] = address
         
     '''
     # find the newest page based on the column index
@@ -69,44 +80,31 @@ class Table:
     # :return: Page             #The page that we want to find
     '''    
     def __find_page(self, col_index, is_base_page = True) -> Page:
-        if (self.allocate_count == 0):
-            range_index = (col_index * 2) // MAX_PAGE_RANGE
-            page_index = (col_index * 2) % MAX_PAGE_RANGE
-            return self.page_list[range_index][page_index] if is_base_page else self.page_list[range_index][page_index + 1]
-        elif (is_base_page) == False:
-            return self.page_list[range_index][page_index + 1]
-        else:
-            range_index = (self.num_columns * (self.allocate_count + 1) + col_index) // MAX_PAGE_RANGE
-            page_index = (self.num_columns * (self.allocate_count + 1) + col_index) % MAX_PAGE_RANGE
-            #print(f'range_index: {range_index}, page_index: {page_index}')
-            return self.page_list[range_index][page_index]
+        return self.base_page_dict[col_index][-1][-1] if is_base_page else self.tail_page_dict[col_index][-1][-1]
         
     '''
     # Create new pages
     # :param page_count: int     #The number of pages to be created
+    # :param is_base_page: bool  #True if we want to create base page, False if we want to create tail page
     '''     
-    def __create_page(self, page_count):
-        for i in range(page_count):
-            if len(self.page_list[-1]) == MAX_PAGE_RANGE:
-                self.page_list.append([])
-            self.page_list[-1].append(Page(len(self.page_list) - 1, len(self.page_list[-1])))
-    
-    '''
-    # Check if the base pages are full
-    # :return: bool     #True if the base pages are full, False otherwise
-    '''
-    def __check_page_full(self) -> bool:
-        if (self.allocate_count == 0):
-            return not self.page_list[-1][-2].has_capacity()
+    def __create_page(self, column_index, is_base_page = True):
+        print("Creating base page" if is_base_page else "Creating tail page")
+        if (is_base_page):
+            page_dict = self.base_page_dict
+            i = 0
         else:
-            return not self.page_list[-1][-1].has_capacity()
-        
-    '''
-    Allocate new pages based on the number of columns
-    '''
-    def __allocate_base_page(self):
-        self.allocate_count += 1
-        self.__create_page(self.num_columns)
+            page_dict = self.tail_page_dict
+            i = 1
+        if (page_dict.get(column_index) == None):
+            page_dict[column_index] = [[]]
+        if (self.page_count_dict.get(column_index) == None):
+            self.page_count_dict[column_index] = [0, 0]
+        self.page_count_dict[column_index][i] += 1
+        if (len(page_dict[column_index]) >= MAX_PAGE_RANGE):
+            page_dict[column_index].append([])
+        page_range_index = (self.page_count_dict[column_index][i] - 1) // MAX_PAGE_RANGE
+        page_index = (self.page_count_dict[column_index][i] - 1) % MAX_PAGE_RANGE
+        page_dict[column_index][-1].append(Page(column_index, page_range_index, page_index, is_base_page))
                                
     def __merge(self):
         print("merge is happening")

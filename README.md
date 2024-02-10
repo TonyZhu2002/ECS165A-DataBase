@@ -20,12 +20,14 @@
     - [ ] Query: sum
     - [ ] Query: sum_version
     - [ ] Query: increment
-    - [ ] Allocate
+    - [x] Allocate
     - [ ] Merge
 
 ## Our design:
 ### Pages:
- #### The Pages are stored in a 2-Dimensional list. When the table is created, the table will create # of 2 * num_col pages, because each column needs 1 base page and 1 tail page. These pages will be appended into a 1-Dimensional list one by one. When the size of 1-Dimensional list reaches the maximum page in a page range. We append this 1-Dimensional list to the 2-Dimensional list as a page collection, which is actually a page range.
+ #### The Pages are stored in dictionaries. There are two dictionary members in a table instance. base_page_dict is responsible for storing base pages, while tail_page_dict is responsible for storing tail pages. They key of the page_dict is the column_index of this column of record, and the value of the dictionary is a list which contains the instaces of corresponding pages. Example: 0:[Page0, Page1], 1:[Page0, Page1, Page2]...
+ 
+ #### When the table is created, the table will 1 base page and 1 tail page for every column of the table. 
 
 #### We periodically merge the base page and a tail page of a record, so we do not need to allocate new tail page for an existed record. However, it is possible that we insert to many records to our base page, then will will create # of num_col pages and append them to appropriate nplaces in the 2-D page list.
 

@@ -22,9 +22,13 @@ class Query:
     # :param value: int        #The value to be modified
     '''
     def modify_page_value(self, address: list, value):
-        page = self.table.page_list[address[0]][address[1]]
-        page.modify_value(value, address[2])
-        pass
+        is_base_page = address[0]
+        column_index = address[1]
+        page_range_index = address[2]
+        page_index = address[3]
+        record_index = address[4]
+        page_dict = self.table.base_page_dict if is_base_page else self.table.tail_page_dict
+        page_dict[column_index][page_range_index][page_index].modify_value(value, record_index)
     
     '''
     # Internal Method
@@ -33,8 +37,13 @@ class Query:
     # :return: int             #The value at the given address
     '''
     def get_page_value(self, address: list) -> int:
-        page = self.table.page_list[address[0]][address[1]]
-        return page.get_value(address[2])
+        is_base_page = address[0]
+        column_index = address[1]
+        page_range_index = address[2]
+        page_index = address[3]
+        record_index = address[4]
+        page_dict = self.table.base_page_dict if is_base_page else self.table.tail_page_dict
+        return page_dict[column_index][page_range_index][page_index].get_value(record_index)
     
     """
     # internal Method

@@ -13,9 +13,9 @@ insert_time_0 = process_time()
 for i in range(0, 10005):
     query.insert(906659671 + i, 93, 0, 0, 0)
     keys.append(906659671 + i)
-    #print('This is iteration', i)
+    print('This is iteration', i)
 insert_time_1 = process_time()
-#print("Inserting 10k records took:  \t\t\t", insert_time_1 - insert_time_0)
+print("Inserting 10k records took:  \t\t\t", insert_time_1 - insert_time_0)
 
 '''
 print("Inserting 10k records took:  \t\t\t", insert_time_1 - insert_time_0)
