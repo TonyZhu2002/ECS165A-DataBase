@@ -53,3 +53,39 @@ class Page:
     def get_value(self, index) -> int:
         begin = index * 4
         return struct.unpack("i", self.data[begin : begin + 4])[0]
+    
+class PageRange:
+    def __init__(self, max_capacity):
+        self.max_capacity = max_capacity
+        self.pages = []
+    
+    '''
+    # Check if the page range has capacity for more pages
+    # :return: bool     #True if the page range has capacity for more pages, False otherwise
+    '''
+    def has_capacity(self):
+        return len(self.pages) < self.max_capacity
+    
+    '''
+    # Add a page to the page range
+    '''
+    def add_page(self, page: Page):
+        if self.has_capacity():
+            self.pages.append(page)
+        else:
+            raise MemoryError("This PageRange is full")
+    
+    '''
+    # Get the latest page in the page range
+    # :return: Page     #The latest page in the page range
+    '''
+    def get_latest_page(self) -> Page:
+        return self.pages[-1]
+    
+    '''
+    # Get the page at the given index
+    # :param index: int     #The index of the page to be retrieved
+    # :return: Page         #The page at the given index
+    '''
+    def get_page(self, index) -> Page:
+        return self.pages[index]

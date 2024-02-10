@@ -27,8 +27,8 @@ class Query:
         page_range_index = address[2]
         page_index = address[3]
         record_index = address[4]
-        page_dict = self.table.base_page_dict if is_base_page else self.table.tail_page_dict
-        page_dict[column_index][page_range_index][page_index].modify_value(value, record_index)
+        page_dict = self.table.base_page_range_dict if is_base_page else self.table.tail_page_range_dict
+        page_dict[column_index][page_range_index].get_page(page_index).modify_value(value, record_index)
     
     '''
     # Internal Method
@@ -42,8 +42,8 @@ class Query:
         page_range_index = address[2]
         page_index = address[3]
         record_index = address[4]
-        page_dict = self.table.base_page_dict if is_base_page else self.table.tail_page_dict
-        return page_dict[column_index][page_range_index][page_index].get_value(record_index)
+        page_dict = self.table.base_page_range_dict if is_base_page else self.table.tail_page_range_dict
+        return page_dict[column_index][page_range_index].get_page(page_index).get_value(record_index)
     
     """
     # internal Method

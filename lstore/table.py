@@ -1,5 +1,5 @@
 from lstore.index import Index
-from lstore.page import Page
+from lstore.page import Page, PageRange
 from lstore.config import *
 from time import time
 import copy
@@ -21,14 +21,28 @@ class Table:
         self.name = name
         self.key = key
         self.num_columns = num_columns + 4
-        self.base_page_dict = {}
-        self.tail_page_dict = {}
+        
+        # Initialize the page range dictionary
+        # The key is the column index
+        # The value is a list of page ranges
+        self.base_page_range_dict = {}
+        self.tail_page_range_dict = {}
+        
+        # Initialize the page count dictionary
+        # The key is the column index
+        # The value is a list of two integers [base_page_count, tail_page_count]
+        # base_page_count is the number of base pages for the column
+        # tail_page_count is the number of tail pages for the column
         self.page_count_dict = {}
+        
         self.index = Index(self)
+        
+        # Initialize the current rid
+        # rid increases by 1 for each record
         self.current_rid = 10000
 
 
-        # Initialize the page list
+        # Initialize the page range list
         for i in range(self.num_columns):
             self.__create_page(i, True)
             self.__create_page(i, False)
@@ -45,12 +59,12 @@ class Table:
     def write_base_record(self, record: Record):
         columns = record.columns
         for i in range(len(columns)):
-            curr_page = self.__find_page(i, True)
+            curr_page = curr_page = self.base_page_range_dict[i][-1].get_latest_page()
             
             # If the page is full, create a new page
             if (not curr_page.has_capacity()):
                 self.__create_page(i, True)
-                curr_page = self.__find_page(i, True)
+                curr_page = curr_page = self.base_page_range_dict[i][-1].get_latest_page()
             address = curr_page.write(columns[i])
             if (address != None):
                 self.index.indices[i][record.key] = address
@@ -63,12 +77,12 @@ class Table:
     def write_tail_record(self, record: Record):
         columns = record.columns
         for i in range(len(columns)):
-            curr_page = self.__find_page(i, False)
+            curr_page = self.base_page_range_dict[i][-1].get_latest_page()
             
             # If the page is full, create a new page
             if (not curr_page.has_capacity()):
                 self.__create_page(i, False)
-                curr_page = self.__find_page(i, False)
+                curr_page = self.base_page_range_dict[i][-1].get_latest_page()
             address = curr_page.write(columns[i])
             if (address != None):
                 self.index.indices[i][record.key] = address
@@ -80,7 +94,8 @@ class Table:
     # :return: Page             #The page that we want to find
     '''    
     def __find_page(self, col_index, is_base_page = True) -> Page:
-        return self.base_page_dict[col_index][-1][-1] if is_base_page else self.tail_page_dict[col_index][-1][-1]
+        page_range = self.base_page_range_dict[col_index][-1] if is_base_page else self.tail_page_range_dict[col_index][-1]
+        return page_range.get_latest_page()
         
     '''
     # Create new pages
@@ -90,21 +105,21 @@ class Table:
     def __create_page(self, column_index, is_base_page = True):
         print("Creating base page" if is_base_page else "Creating tail page")
         if (is_base_page):
-            page_dict = self.base_page_dict
+            page_range_dict = self.base_page_range_dict
             i = 0
         else:
-            page_dict = self.tail_page_dict
+            page_range_dict = self.tail_page_range_dict
             i = 1
-        if (page_dict.get(column_index) == None):
-            page_dict[column_index] = [[]]
+        if (page_range_dict.get(column_index) == None):
+            page_range_dict[column_index] = [PageRange(MAX_PAGE_RANGE)]
         if (self.page_count_dict.get(column_index) == None):
             self.page_count_dict[column_index] = [0, 0]
         self.page_count_dict[column_index][i] += 1
-        if (len(page_dict[column_index]) >= MAX_PAGE_RANGE):
-            page_dict[column_index].append([])
+        if (not page_range_dict[column_index][-1].has_capacity()):
+            page_range_dict[column_index].append(PageRange(MAX_PAGE_RANGE))
         page_range_index = (self.page_count_dict[column_index][i] - 1) // MAX_PAGE_RANGE
         page_index = (self.page_count_dict[column_index][i] - 1) % MAX_PAGE_RANGE
-        page_dict[column_index][-1].append(Page(column_index, page_range_index, page_index, is_base_page))
+        page_range_dict[column_index][-1].add_page(Page(column_index, page_range_index, page_index, is_base_page))
                                
     def __merge(self):
         print("merge is happening")
