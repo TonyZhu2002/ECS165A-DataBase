@@ -1,5 +1,7 @@
 from lstore.table import Table, Record
 from lstore.index import Index
+from lstore.config import *
+from time import time
 
 
 class Query:
@@ -9,10 +11,39 @@ class Query:
     Queries that succeed should return the result or True
     Any query that crashes (due to exceptions) should return False
     """
-    def __init__(self, table):
+    def __init__(self, table: Table):
         self.table = table
         pass
-
+    
+    '''
+    # Internal Method
+    # Modify the value at the given address in a page
+    # :param address: list     #The address of the value to be modified
+    # :param value: int        #The value to be modified
+    '''
+    def modify_page_value(self, address: list, value):
+        is_base_page = address[0]
+        column_index = address[1]
+        page_range_index = address[2]
+        page_index = address[3]
+        record_index = address[4]
+        page_dict = self.table.base_page_range_dict if is_base_page else self.table.tail_page_range_dict
+        page_dict[column_index][page_range_index].get_page(page_index).modify_value(value, record_index)
+    
+    '''
+    # Internal Method
+    # Get the value at the given address in a page
+    # :param address: list     #The address of the value to be retrieved
+    # :return: int             #The value at the given address
+    '''
+    def get_page_value(self, address: list) -> int:
+        is_base_page = address[0]
+        column_index = address[1]
+        page_range_index = address[2]
+        page_index = address[3]
+        record_index = address[4]
+        page_dict = self.table.base_page_range_dict if is_base_page else self.table.tail_page_range_dict
+        return page_dict[column_index][page_range_index].get_page(page_index).get_value(record_index)
     
     """
     # internal Method
@@ -21,6 +52,12 @@ class Query:
     # Return False if record doesn't exist or is locked due to 2PL
     """
     def delete(self, primary_key):
+        rid = self.table.current_rid
+        if rid != None:
+            del rid
+            return True
+        if rid == None or rid == primary_key:
+            return False
         pass
     
     
@@ -30,9 +67,22 @@ class Query:
     # Returns False if insert fails for whatever reason
     """
     def insert(self, *columns):
+        key_index = self.table.key
+        key = columns[key_index]
+        
+        if self.table.index.base_page_indices[key_index].has_key(key):
+            raise ValueError(f'Key {key} already exists!')
+        
+        # Setup the metadata
+        indirection = '0'
+        rid = self.table.current_rid
+        self.table.current_rid += 1
+        time_stamp = int(time())
         schema_encoding = '0' * self.table.num_columns
-        pass
-
+        
+        data = list(columns) + [indirection, rid, time_stamp, schema_encoding]
+        record = Record(rid, key, data)
+        self.table.write_base_record(record)
     
     """
     # Read matching record with specified search key
@@ -67,6 +117,25 @@ class Query:
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
     def update(self, primary_key, *columns):
+        key_index = self.table.key
+        key = columns[key_index]
+        
+        if self.table.index.indices[key_index].has_key(key):
+            raise ValueError(f'Key {key} already exists!')
+        
+        # Setup data for tail record
+        indirection = self.table.index.indices[4][primary_key]
+        rid = self.table.current_rid
+        self.table.current_rid += 1
+        time_stamp = int(time())
+        schema_encoding = '0' * self.table.num_columns
+        for i in range(self.table.num_columns):
+            if(self.table.index.indices[i][primary_key] != key[i]):
+                schema_encoding[i] = '1'
+        
+        data = list(columns) + [indirection, rid, time_stamp, schema_encoding]
+        record = Record(rid, key, data)
+        self.table.write_tail_record(record)
         pass
 
     
