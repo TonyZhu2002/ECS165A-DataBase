@@ -16,6 +16,12 @@
     - [ ] Query: Delete
     - [ ] Query: Update
     - [ ] Query: Select
+    - [ ] Query: select_version
+    - [ ] Query: sum
+    - [ ] Query: sum_version
+    - [ ] Query: increment
+    - [ ] Allocate
+    - [ ] Merge
 
 ## Our design:
 ### Pages:
