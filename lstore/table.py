@@ -67,7 +67,7 @@ class Table:
                 curr_page = curr_page = self.base_page_range_dict[i][-1].get_latest_page()
             address = curr_page.write(columns[i])
             if (address != None):
-                self.index.indices[i][record.key] = address
+                self.index.base_page_indices[i][record.key] = address
     
     '''
     # Write a column to the tail page (Further Test Needed)
@@ -85,7 +85,7 @@ class Table:
                 curr_page = self.base_page_range_dict[i][-1].get_latest_page()
             address = curr_page.write(columns[i])
             if (address != None):
-                self.index.indices[i][record.key] = address
+                self.index.tail_page_indices[i][record.key] = address
         
     '''
     # Create new pages

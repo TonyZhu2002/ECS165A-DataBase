@@ -8,9 +8,12 @@ class Index:
 
     def __init__(self, table):
         # One index for each table. All our empty initially.
-        self.indices = [None] * table.num_columns
-        if (self.indices[table.key] == None):
-            self.indices[table.key] = OOBTree()
+        self.base_page_indices = [None] * table.num_columns
+        self.tail_page_indices = [None] * table.num_columns
+        if (self.base_page_indices[table.key] == None):
+            self.base_page_indices[table.key] = OOBTree()
+        if (self.tail_page_indices[table.key] == None):
+            self.tail_page_indices[table.key] = OOBTree()
 
     """
     # returns the location of all records with the given value on column "column"
@@ -40,17 +43,17 @@ class Index:
     """
 
     def create_index(self, column_number):
-        if (self.indices[column_number] == None):
-            self.indices[column_number] = OOBTree()
-        else:
-            print(f'Index already exists in column {column_number}!')
+        if (self.base_page_indices[column_number] == None):
+            self.base_page_indices[column_number] = OOBTree()
+        if (self.tail_page_indices[column_number] == None):
+            self.tail_page_indices[column_number] = OOBTree()
 
     """
     # optional: Drop index of specific column
     """
 
     def drop_index(self, column_number):
-        if (self.indices[column_number] != None):
-            self.indices[column_number] = None
-        else:
-            print(f'Index does not exist in column {column_number}!')
+        if (self.base_page_indices[column_number] != None):
+            self.base_page_indices[column_number] = None
+        if (self.tail_page_indices[column_number] != None):
+            self.tail_page_indices[column_number] = None

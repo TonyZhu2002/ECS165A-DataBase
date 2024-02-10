@@ -70,7 +70,7 @@ class Query:
         key_index = self.table.key
         key = columns[key_index]
         
-        if self.table.index.indices[key_index].has_key(key):
+        if self.table.index.base_page_indices[key_index].has_key(key):
             raise ValueError(f'Key {key} already exists!')
         
         # Setup the metadata

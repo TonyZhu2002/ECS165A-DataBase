@@ -11,6 +11,7 @@
     - [x] Create db 
     - [x] Create table
     - [x] Create page
+    - [x] Create page range
     - [x] Use index to keep track of data
     - [x] Query: Insert
     - [ ] Query: Delete
