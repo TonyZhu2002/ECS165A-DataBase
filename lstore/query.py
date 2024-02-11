@@ -160,10 +160,10 @@ class Query:
         for i in range(self.table.num_columns - 4):
             if data[i] == None:
                 if(first_update):
-                    if self.table.index.base_page_indices[i][primary_key] != None:
+                    if self.table.index.base_page_indices[i].has_key(primary_key):
                         data[i] = self.table.index.base_page_indices[i][primary_key]
                 else:
-                    if self.table.index.tail_page_indices[i][tail_indirection] != None:
+                    if self.table.index.tail_page_indices[i].has_key(tail_indirection):
                         data[i] = self.table.index.tail_page_indices[i][tail_indirection]
             
         time_stamp = int(time())
