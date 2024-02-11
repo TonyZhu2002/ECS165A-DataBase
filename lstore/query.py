@@ -79,7 +79,7 @@ class Query:
         rid = self.table.current_rid
         self.table.current_rid += 1
         time_stamp = int(time())
-        schema_encoding = '0' * self.table.num_columns
+        schema_encoding = '0' * (self.table.num_columns - 4)
         
         data = list(columns) + [indirection, rid, time_stamp, schema_encoding]
         record = Record(rid, key, data)
@@ -120,39 +120,58 @@ class Query:
     """
     def update(self, primary_key, *columns) -> bool:
         key_index = self.table.key
-        key = columns[key_index]
-        indirection_index = self.table.num_columns + 0
+        key = columns[key_index] # Get key value in position index 0
+        indirection_index = self.table.indirection_index
+        rid_index = self.table.rid_index
         
-        if not self.table.index.base_page_indices[key_index].has_key(key):
+        if not self.table.index.base_page_indices[key_index].has_key(primary_key):
             return False
         
-        tree = self.table.index.base_page_indices[indirection_index]
-        address = tree[key]
-        indirection = self.get_page_value(address)
+        indirection_tree = self.table.index.base_page_indices[indirection_index]
+        base_indirection_address = indirection_tree[primary_key]
+        base_indirection = self.get_page_value(base_indirection_address)
         
-        # If we never updated the record before
-        if indirection == '0':
-            pass
-        # If we updated the record before
-        else:
-            pass
-        
-        
-        
-        self.table.index.indices[4][primary_key]
         rid = self.table.current_rid
         self.table.current_rid += 1
-        time_stamp = int(time())
-        schema_encoding = '0' * self.table.num_columns
-        for i in range(self.table.num_columns):
-            if(self.table.index.indices[i][primary_key] != key[i]):
-                schema_encoding[i] = '1'
+        schema_encoding = '0' * (self.table.num_columns - 4)
         
-        data = list(columns) + [indirection, rid, time_stamp, schema_encoding]
+        first_update = False
+        
+        # If we never updated the record before
+        if base_indirection == '0': # Let base record and tail record's indirections point to each other
+            self.modify_page_value(base_indirection_address, rid)
+            # Use rid tree to find the base record's rid and assign this rid to the indirection column of new record
+            rid_tree = self.table.index.base_page_indices[rid_index]
+            base_rid_address = rid_tree[primary_key]
+            tail_indirection = self.get_page_value(base_rid_address)
+            first_update = True
+        # If we updated the record before
+        else: # Let tail record's indirection points to the orginal base record's indirection, 
+              # then update base record's indirection to tail record's rid
+            tail_indirection = base_indirection
+            self.modify_page_value(base_indirection_address, rid)
+            
+        data = [None] * (self.table.num_columns - 4)
+        
+        for i in range(self.table.num_columns - 4):
+            if columns[i] != None:
+                data[i] = columns[i]
+        
+        for i in range(self.table.num_columns - 4):
+            if data[i] == None:
+                if(first_update):
+                    if self.table.index.base_page_indices[i][primary_key] != None:
+                        data[i] = self.table.index.base_page_indices[i][primary_key]
+                else:
+                    if self.table.index.tail_page_indices[i][tail_indirection] != None:
+                        data[i] = self.table.index.tail_page_indices[i][tail_indirection]
+            
+        time_stamp = int(time())
+        
+        data = list(data) + [tail_indirection, rid, time_stamp, schema_encoding]
         record = Record(rid, key, data)
         self.table.write_tail_record(record)
         return True
-        pass
 
     
     """

@@ -19,6 +19,7 @@ print("Inserting 10k records took:  \t\t\t", insert_time_1 - insert_time_0)
 
 '''
 print("Inserting 10k records took:  \t\t\t", insert_time_1 - insert_time_0)
+'''
 
 # Measuring update Performance
 update_cols = [
@@ -32,9 +33,11 @@ update_cols = [
 update_time_0 = process_time()
 for i in range(0, 10000):
     query.update(choice(keys), *(choice(update_cols)))
+    print('This is update iteration', i)
 update_time_1 = process_time()
 print("Updating 10k records took:  \t\t\t", update_time_1 - update_time_0)
 
+'''
 # Measuring Select Performance
 select_time_0 = process_time()
 for i in range(0, 10000):
