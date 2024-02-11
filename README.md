@@ -20,8 +20,10 @@
     - [ ] Query: select_version
     - [ ] Query: sum
     - [ ] Query: sum_version
-    - [ ] Query: increment
+    - [x] Query: increment
     - [x] Allocate
+    - [ ] locate
+    - [ ] locate_range
     - [ ] Merge
 
 ## Our design:
