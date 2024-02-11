@@ -67,6 +67,7 @@ class Table:
             
             # If the page is full, create a new page
             if (not curr_page.has_capacity()):
+                print(f'current capacity: {curr_page.num_records}')
                 self.__create_page(i, True)
                 curr_page = curr_page = self.base_page_range_dict[i][-1].get_latest_page()
             address = curr_page.write(columns[i])
@@ -81,12 +82,12 @@ class Table:
     def write_tail_record(self, record: Record):
         columns = record.columns
         for i in range(len(columns)):
-            curr_page = self.base_page_range_dict[i][-1].get_latest_page()
+            curr_page = self.tail_page_range_dict[i][-1].get_latest_page()
             
             # If the page is full, create a new page
             if (not curr_page.has_capacity()):
                 self.__create_page(i, False)
-                curr_page = self.base_page_range_dict[i][-1].get_latest_page()
+                curr_page = self.tail_page_range_dict[i][-1].get_latest_page()
             address = curr_page.write(columns[i])
             if (address != None):
                 self.index.tail_page_indices[i][record.key] = address
