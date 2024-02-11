@@ -1,5 +1,6 @@
 from lstore.table import Table, Record
 from lstore.index import Index
+from BTrees.OOBTree import OOBTree
 from lstore.config import *
 from time import time
 
@@ -66,12 +67,12 @@ class Query:
     # Return True upon succesful insertion
     # Returns False if insert fails for whatever reason
     """
-    def insert(self, *columns):
+    def insert(self, *columns) -> bool:
         key_index = self.table.key
         key = columns[key_index]
         
         if self.table.index.base_page_indices[key_index].has_key(key):
-            raise ValueError(f'Key {key} already exists!')
+            return False
         
         # Setup the metadata
         indirection = '0'
@@ -83,6 +84,7 @@ class Query:
         data = list(columns) + [indirection, rid, time_stamp, schema_encoding]
         record = Record(rid, key, data)
         self.table.write_base_record(record)
+        return True
     
     """
     # Read matching record with specified search key
@@ -116,15 +118,28 @@ class Query:
     # Returns True if update is succesful
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
-    def update(self, primary_key, *columns):
+    def update(self, primary_key, *columns) -> bool:
         key_index = self.table.key
         key = columns[key_index]
+        indirection_index = self.table.num_columns + 0
         
-        if self.table.index.indices[key_index].has_key(key):
-            raise ValueError(f'Key {key} already exists!')
+        if not self.table.index.base_page_indices[key_index].has_key(key):
+            return False
         
-        # Setup data for tail record
-        indirection = self.table.index.indices[4][primary_key]
+        tree = self.table.index.base_page_indices[indirection_index]
+        address = tree[key]
+        indirection = self.get_page_value(address)
+        
+        # If we never updated the record before
+        if indirection == '0':
+            pass
+        # If we updated the record before
+        else:
+            pass
+        
+        
+        
+        self.table.index.indices[4][primary_key]
         rid = self.table.current_rid
         self.table.current_rid += 1
         time_stamp = int(time())
@@ -136,6 +151,7 @@ class Query:
         data = list(columns) + [indirection, rid, time_stamp, schema_encoding]
         record = Record(rid, key, data)
         self.table.write_tail_record(record)
+        return True
         pass
 
     

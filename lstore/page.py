@@ -58,7 +58,10 @@ class Page:
     
 class PageRange:
     def __init__(self, max_capacity):
+        # The maximum number of pages that can be stored in this page range
         self.max_capacity = max_capacity
+        
+        # For example, [Page1, Page2, Page3, ..., PageMaxCapacity]
         self.pages = []
     
     '''
