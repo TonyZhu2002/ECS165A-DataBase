@@ -164,7 +164,7 @@ class Query:
         
         rid = self.table.current_rid
         self.table.current_rid += 1
-        schema_encoding = '0' * (self.table.num_columns - 4) # Assume this is our first update
+        schema_encoding_init = ['0'] * (self.table.num_columns - 4) # Assume this is our first update
         
         first_update = False
         
@@ -184,15 +184,16 @@ class Query:
         
         # If this is not our first update, then we copy the previous update's schema encoding
         if not first_update:
-            if self.table.index.tail_page_indices[i].has_key(tail_indirection):
-                schema_encoding = self.table.index.tail_page_indices[se_index][tail_indirection]
+            if self.table.index.tail_page_indices[se_index].has_key(tail_indirection):
+                schema_encoding_init = list(self.table.index.tail_page_indices[se_index][tail_indirection])
+        print("No First Update: ", schema_encoding_init)
             
         data = [None] * (self.table.num_columns - 4)
         
         for i in range(self.table.num_columns - 4):
             if columns[i] != None:
                 data[i] = columns[i]
-                schema_encoding[i] = '1'
+                schema_encoding_init[i] = '1'
         
         for i in range(self.table.num_columns - 4):
             if data[i] == None:
@@ -202,7 +203,9 @@ class Query:
                 else:
                     if self.table.index.tail_page_indices[i].has_key(tail_indirection):
                         data[i] = self.table.index.tail_page_indices[i][tail_indirection]
-            
+        
+        print("After Adjustment: ", schema_encoding_init)
+        schema_encoding = ''.join(schema_encoding_init)
         time_stamp = int(time())
         
         data = list(data) + [tail_indirection, rid, time_stamp, schema_encoding]
