@@ -153,6 +153,7 @@ class Query:
         key = columns[key_index] # Get key value in position index 0
         indirection_index = self.table.indirection_index
         rid_index = self.table.rid_index
+        se_index = self.table.schema_encoding_index
         
         if not self.table.index.base_page_indices[key_index].has_key(primary_key):
             return False
@@ -163,7 +164,7 @@ class Query:
         
         rid = self.table.current_rid
         self.table.current_rid += 1
-        schema_encoding = '0' * (self.table.num_columns - 4)
+        schema_encoding = '0' * (self.table.num_columns - 4) # Assume this is our first update
         
         first_update = False
         
@@ -180,12 +181,18 @@ class Query:
               # then update base record's indirection to tail record's rid
             tail_indirection = base_indirection
             self.modify_page_value(base_indirection_address, rid)
+        
+        # If this is not our first update, then we copy the previous update's schema encoding
+        if not first_update:
+            if self.table.index.tail_page_indices[i].has_key(tail_indirection):
+                schema_encoding = self.table.index.tail_page_indices[se_index][tail_indirection]
             
         data = [None] * (self.table.num_columns - 4)
         
         for i in range(self.table.num_columns - 4):
             if columns[i] != None:
                 data[i] = columns[i]
+                schema_encoding[i] = '1'
         
         for i in range(self.table.num_columns - 4):
             if data[i] == None:
