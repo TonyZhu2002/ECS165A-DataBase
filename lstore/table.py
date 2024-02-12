@@ -67,7 +67,6 @@ class Table:
             
             # If the page is full, create a new page
             if (not curr_page.has_capacity()):
-                print(f'current capacity: {curr_page.num_records}')
                 self.__create_page(i, True)
                 curr_page = curr_page = self.base_page_range_dict[i][-1].get_latest_page()
             address = curr_page.write(columns[i])
@@ -98,7 +97,6 @@ class Table:
     # :param is_base_page: bool  #True if we want to create base page, False if we want to create tail page
     '''     
     def __create_page(self, column_index, is_base_page = True):
-        print("Creating base page" if is_base_page else "Creating tail page")
         if (is_base_page):
             page_range_dict = self.base_page_range_dict
             i = 0
