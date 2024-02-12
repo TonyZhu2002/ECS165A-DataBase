@@ -63,12 +63,12 @@ class Table:
     def write_base_record(self, record: Record):
         columns = record.columns
         for i in range(len(columns)):
-            curr_page = curr_page = self.base_page_range_dict[i][-1].get_latest_page()
+            curr_page = self.base_page_range_dict[i][-1].get_latest_page()
             
             # If the page is full, create a new page
             if (not curr_page.has_capacity()):
                 self.__create_page(i, True)
-                curr_page = curr_page = self.base_page_range_dict[i][-1].get_latest_page()
+                curr_page = self.base_page_range_dict[i][-1].get_latest_page()
             address = curr_page.write(columns[i])
             if (address != None):
                 self.index.base_page_indices[i][record.key] = address
