@@ -18,6 +18,36 @@ class Query:
     
     '''
     # Internal Method
+    # Get the address of the base data for the given primary key and column index
+    # :param primary_key: int     #The primary key of the record
+    # :param column_index: int    #The index of the column
+    # :return: list               #The address of the base data
+    '''
+    def get_base_data_address(self, primary_key, column_index) -> list:
+        if column_index >= self.table.num_columns:
+            raise ValueError("Column index out of range")
+        tree = self.table.index.base_page_indices[column_index]
+        if not tree.has_key(primary_key):
+            return None
+        return tree[primary_key]
+    
+    '''
+    # Internal Method
+    # Get the address of the tail data for the given rid and column index
+    # :param rid: int             #The rid of the record
+    # :param column_index: int    #The index of the column
+    # :return: list               #The address of the tail data
+    '''
+    def get_tail_data_address(self, rid, column_index) -> list:
+        if column_index >= self.table.num_columns:
+            raise ValueError("Column index out of range")
+        tree = self.table.index.tail_page_indices[column_index]
+        if not tree.has_key(rid):
+            return None
+        return tree[rid]
+    
+    '''
+    # Internal Method
     # Modify the value at the given address in a page
     # :param address: list     #The address of the value to be modified
     # :param value: int        #The value to be modified
