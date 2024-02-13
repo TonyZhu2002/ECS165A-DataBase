@@ -83,15 +83,13 @@ class Query:
     # Return False if record doesn't exist or is locked due to 2PL
     """
     def delete(self, primary_key):
-        column_index = self.table.
-        address = self.get_base_data_address(primary_key,column_index)
-        record = self.get_page_value(address)
-        if record != None:
-            del record
+        null_columns = [None] * (self.table.num_columns - 4)
+        key_index = self.table.key
+        if self.table.index.base_page_indices[key_index].has_key(primary_key):
+            self.update(primary_key, *null_columns)
             return True
-        if record == None:
+        else:
             return False
-        pass
     
     
     """
@@ -164,6 +162,18 @@ class Query:
         base_indirection_address = indirection_tree[primary_key]
         base_indirection = self.get_page_value(base_indirection_address)
         
+        # Compatible with Delete Function
+        delete_detect = True
+        
+        for i in range(self.table.num_columns - 4):
+            if columns[i] != None:
+                delete_detect = False
+        
+        if delete_detect:
+            rid = 0
+            self.modify_page_value(base_indirection_address, rid)
+            return True
+        
         rid = self.table.current_rid
         self.table.current_rid += 1
         schema_encoding_init = ['0'] * (self.table.num_columns - 4) # Assume this is our first update
@@ -183,22 +193,22 @@ class Query:
               # then update base record's indirection to tail record's rid
             tail_indirection = base_indirection
             self.modify_page_value(base_indirection_address, rid)
-            
-        data = [None] * (self.table.num_columns - 4)
+        
+        data_init = [None] * (self.table.num_columns - 4)
         
         for i in range(self.table.num_columns - 4):
             if columns[i] != None:
-                data[i] = columns[i]
+                data_init[i] = columns[i]
                 schema_encoding_init[i] = '1'
         
         for i in range(self.table.num_columns - 4):
-            if data[i] == None:
+            if data_init[i] == None:
                 if(first_update):
                     if self.table.index.base_page_indices[i].has_key(primary_key):
-                        data[i] = self.get_page_value(self.get_base_data_address(primary_key, i))
+                        data_init[i] = self.get_page_value(self.get_base_data_address(primary_key, i))
                 else:
                     if self.table.index.tail_page_indices[i].has_key(tail_indirection):
-                        data[i] = self.get_page_value(self.get_tail_data_address(tail_indirection, i))
+                        data_init[i] = self.get_page_value(self.get_tail_data_address(tail_indirection, i))
                         if self.table.index.base_page_indices[i].has_key(primary_key):
                             if self.get_page_value(self.get_tail_data_address(tail_indirection, i)) != self.get_page_value(self.get_base_data_address(primary_key, i)):
                                 schema_encoding_init[i] = '1'
@@ -206,7 +216,7 @@ class Query:
         schema_encoding = ''.join(schema_encoding_init)
         time_stamp = int(time())
         
-        data = list(data) + [tail_indirection, rid, time_stamp, schema_encoding]
+        data = list(data_init) + [tail_indirection, rid, time_stamp, schema_encoding]
         record = Record(rid, key, data)
         self.table.write_tail_record(record)
         return True
