@@ -193,18 +193,15 @@ class Query:
             if data[i] == None:
                 if(first_update):
                     if self.table.index.base_page_indices[i].has_key(primary_key):
-                        data[i] = self.table.index.base_page_indices[i][primary_key]
+                        data[i] = self.get_page_value(self.get_base_data_address(primary_key, i))
                 else:
                     if self.table.index.tail_page_indices[i].has_key(tail_indirection):
-                        data[i] = self.table.index.tail_page_indices[i][tail_indirection]
+                        data[i] = self.get_page_value(self.get_tail_data_address(tail_indirection, i))
                         if self.table.index.base_page_indices[i].has_key(primary_key):
-                            if self.table.index.tail_page_indices[i][tail_indirection] != self.table.index.base_page_indices[i][primary_key]:
+                            if self.get_page_value(self.get_tail_data_address(tail_indirection, i)) != self.get_page_value(self.get_base_data_address(primary_key, i)):
                                 schema_encoding_init[i] = '1'
         
-        print("Before Adjustment: ", schema_encoding_init)
         schema_encoding = ''.join(schema_encoding_init)
-        print("After Adjustment: ", schema_encoding)
-        print("Type: ", type(schema_encoding))
         time_stamp = int(time())
         
         data = list(data) + [tail_indirection, rid, time_stamp, schema_encoding]
