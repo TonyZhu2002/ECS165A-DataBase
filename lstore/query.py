@@ -83,6 +83,7 @@ class Query:
     # Return False if record doesn't exist or is locked due to 2PL
     """
     def delete(self, primary_key):
+        column_index = self.table.
         address = self.get_base_data_address(primary_key,column_index)
         record = self.get_page_value(address)
         if record != None:
