@@ -76,6 +76,16 @@ class Query:
         page_dict = self.table.base_page_range_dict if is_base_page else self.table.tail_page_range_dict
         return page_dict[column_index][page_range_index].get_page(page_index).get_value(record_index)
     
+
+    def get_primary_key_address(self, search_key, search_key_index, is_base = True):
+        if is_base:
+            pagerange_list = self.table.base_page_range_dict[search_key_index]
+        else:
+            pagerange_list = self.table.tail_page_range_dict[search_key_index]
+        address_list = []
+        for pagerange in pagerange_list:
+            pagerange.get_primary_key_address(search_key, address_list)
+        return address_list
     """
     # internal Method
     # Read a record with specified RID
@@ -128,14 +138,11 @@ class Query:
     def select(self, search_key, search_key_index, projected_columns_index):
         if (not self.table.base_page_range_dict.has_key(search_key_index)):
             return False
-        pagerange_list = self.table.base_page_range_dict[search_key_index]
-        address_list = []
-        for pagerange in pagerange_list:
-            pagerange.get_primary_key_address(search_key, address_list)
-        value_list = []
+        address_list = self.get_primary_key_address(search_key, search_key_index, True)
+        primary_key_list = []
         for address in address_list:
             value = self.get_page_value(address)
-            value_list.append(value)
+            primary_key_list.append(value)
 
 
 

@@ -18,16 +18,35 @@ class TestQuery(unittest.TestCase):
             keys.append(i)
             records[i+100] = [i+100, i+100, i+200, i+300, i+400]
             keys.append(i+100)
-            self.assertTrue(query.insert(records[i]))
+            self.assertTrue(query.insert(*records[i]))
             self.assertFalse(query.insert(i, i+100, i+200, i+300, i+400))
-            self.assertTrue(query.insert(records[i+100]))
+            self.assertTrue(query.insert(*records[i+100]))
             
         for key in keys:
             expected_record = records[key]
-            for i in range(len(record)):
+            for i in range(len(expected_record)):
                 address = grades_table.index.base_page_indices[i][key]
-                self.assertEqual(query.get_page_value(address), record[i])
-    
+                self.assertEqual(query.get_page_value(address), expected_record[i])
+
+    def test_get_primary_key_address(self):
+        print()
+        expected_primary_key_list = []
+        search_key_index = 2
+        search_key = 2
+        primary_key_list = []
+        for record in records.values():
+            if (record[search_key_index] == search_key):
+                expected_primary_key_list.append(record[key_index])
+        primary_address_list = query.get_primary_key_address(search_key, search_key_index, True)
+        for address in primary_address_list:
+            primary_key_list.append(query.get_page_value(address))
+        print(primary_key_list)
+        print(expected_primary_key_list)
+        self.assertEqual(primary_key_list, expected_primary_key_list)
+                
+
+        
+    '''
     def test_update(self):
         
         for i in range(len(records)):
@@ -62,7 +81,7 @@ class TestQuery(unittest.TestCase):
         updated_list = choice(update_cols)
         for old_list in records:
             if old_list[key_index] == key:
-                
+    '''               
             
             
             
