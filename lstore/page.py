@@ -37,11 +37,13 @@ class Page:
         else: 
             raise MemoryError("This Page is full")
         
-    def readall(self) -> list:
-        data_list = []
+    def readall(self, key_value) -> list:
+        key_list = []
         for i in range(self.num_records):
-            data_list.append(self.get_value(i))
-        return data_list
+            value = self.get_value(i)
+            if value == key_value:
+                key_list.append()
+        return key_list
     
     '''
     # Modify the value at the given index
@@ -100,10 +102,10 @@ class PageRange:
     def get_page(self, index) -> Page:
         return self.pages[index]
     
-    def readall(self) -> list:
-        data_list = []
+    def readall(self, key_value) -> list:
+        key_list = []
         for page in self.pages:
-            current_list = page.readall()
+            current_list = page.readall(key_value)
             for data in current_list:
-                data_list.append(data)
-        return data_list
+                key_list.append(data)
+        return key_list
