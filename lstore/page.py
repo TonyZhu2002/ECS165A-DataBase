@@ -3,13 +3,14 @@ import struct
 
 class Page:
 
-    def __init__(self, column_index, page_range_index, page_index, is_base_page):
+    def __init__(self, column_index, page_range_index, page_index, table_key_index, is_base_page,):
         self.num_records = 0
         self.data = bytearray(MAX_PAGE_SIZE)
         self.column_index = column_index
         self.page_range_index = page_range_index
         self.page_index = page_index
         self.is_base_page = is_base_page
+        self.table_key_index = table_key_index
 
     '''
     # Check if the page has capacity for more records
@@ -37,13 +38,12 @@ class Page:
         else: 
             raise MemoryError("This Page is full")
         
-    def readall(self, key_value) -> list:
-        key_list = []
+    def get_primary_key_address(self, key_value, dest_list):
         for i in range(self.num_records):
             value = self.get_value(i)
             if value == key_value:
-                key_list.append()
-        return key_list
+                address = [self.is_base_page, self.table_key_index, self.page_range_index, self.page_index, i]
+                dest_list.append(address)
     
     '''
     # Modify the value at the given index
@@ -102,10 +102,6 @@ class PageRange:
     def get_page(self, index) -> Page:
         return self.pages[index]
     
-    def readall(self, key_value) -> list:
-        key_list = []
+    def get_primary_key_address(self, key_value, dest_list):
         for page in self.pages:
-            current_list = page.readall(key_value)
-            for data in current_list:
-                key_list.append(data)
-        return key_list
+            page.get_primary_key_address(key_value, dest_list)

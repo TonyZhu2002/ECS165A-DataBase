@@ -129,11 +129,13 @@ class Query:
         if (not self.table.base_page_range_dict.has_key(search_key_index)):
             return False
         pagerange_list = self.table.base_page_range_dict[search_key_index]
-        key_list = []
+        address_list = []
         for pagerange in pagerange_list:
-            current_list = pagerange.readall(search_key)
-            for data in current_list:
-                key_list.append(data)
+            pagerange.get_primary_key_address(search_key, address_list)
+        value_list = []
+        for address in address_list:
+            value = self.get_page_value(address)
+            value_list.append(value)
 
 
 
