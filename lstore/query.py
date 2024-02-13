@@ -136,7 +136,7 @@ class Query:
     # Assume that select will never be called on a key that doesn't exist
     """
     def select(self, search_key, search_key_index, projected_columns_index):
-        if search_key_index not in self.table.base_page_range_dict:
+        if (not self.table.index.base_page_indices[search_key_index].has_key(search_key_index)):
             return False
         
         i = 0
