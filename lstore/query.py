@@ -221,7 +221,18 @@ class Query:
     # Returns False if no record exists in the given range
     """
     def sum(self, start_range, end_range, aggregate_column_index):
-        pass
+        result = 0
+        terminate_key = 0
+        for i in range(start_range, end_range + 1):
+            if self.table.index.base_page_indices[aggregate_column_index].has_key(i):
+                result += self.get_page_value(self.get_base_data_address(i, aggregate_column_index))
+            else:
+                terminate_key = i
+                break
+        if terminate_key == start_range:
+            return False
+        else:
+            return result
 
     
     """
