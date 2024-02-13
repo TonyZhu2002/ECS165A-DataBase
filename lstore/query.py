@@ -138,12 +138,34 @@ class Query:
     def select(self, search_key, search_key_index, projected_columns_index):
         if (not self.table.base_page_range_dict.has_key(search_key_index)):
             return False
+        
+        i = 0
+        column_index_list = []
+        for val in projected_columns_index:
+            if val == 1:
+                column_index_list.append(i)
+            i += 1
+        
         address_list = self.get_primary_key_address(search_key, search_key_index, True)
         primary_key_list = []
+        
         for address in address_list:
             value = self.get_page_value(address)
             primary_key_list.append(value)
-
+        
+        result_record_list = []
+        
+        for primary_key in primary_key_list:
+            data_package = []
+            latest_update_record_rid = self.get_page_value(self.get_base_data_address(primary_key, self.table.indirection_index))
+            for column_index in column_index_list:
+                if self.table.index.tail_page_indices[column_index].has_key[latest_update_record_rid]:
+                    data_package.append(self.get_page_value(self.get_tail_data_address(latest_update_record_rid, column_index)))
+            record = Record(self.get_page_value(self.get_base_data_address(primary_key, self.table.rid_index)), primary_key, data_package)
+            result_record_list.append(record)
+        
+        return result_record_list
+        
 
 
                 
@@ -237,6 +259,9 @@ class Query:
                                 schema_encoding_init[i] = '1'
         
         schema_encoding = ''.join(schema_encoding_init)
+        
+        self.modify_page_value(self.get_base_data_address(primary_key, self.table.schema_encoding_index), schema_encoding)
+        
         time_stamp = int(time())
         
         data = list(data_init) + [tail_indirection, rid, time_stamp, schema_encoding]
