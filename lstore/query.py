@@ -178,6 +178,9 @@ class Query:
         if not self.table.index.base_page_indices[key_index].has_key(primary_key):
             return False
         
+        if self.get_page_value(self.get_base_data_address(primary_key, indirection_index)) < 10000:
+            return False
+        
         indirection_tree = self.table.index.base_page_indices[indirection_index]
         base_indirection_address = indirection_tree[primary_key]
         base_indirection = self.get_page_value(base_indirection_address)
