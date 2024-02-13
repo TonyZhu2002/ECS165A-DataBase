@@ -36,7 +36,12 @@ class Page:
             return [self.is_base_page, self.column_index, self.page_range_index, self.page_index, self.num_records - 1]
         else: 
             raise MemoryError("This Page is full")
-            
+        
+    def readall(self) -> list:
+        data_list = []
+        for i in range(self.num_records):
+            data_list.append(self.get_value(i))
+        return data_list
     
     '''
     # Modify the value at the given index

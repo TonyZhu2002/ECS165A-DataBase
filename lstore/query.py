@@ -126,7 +126,15 @@ class Query:
     # Assume that select will never be called on a key that doesn't exist
     """
     def select(self, search_key, search_key_index, projected_columns_index):
-        pass
+        if (not self.table.base_page_range_dict.has_key(search_key_index)):
+            return False
+        pagerange_list = self.table.base_page_range_dict[search_key_index]
+        data_list = []
+        for page in pagerange_list:
+            data_list = page.readall()
+
+
+                
 
     
     """
