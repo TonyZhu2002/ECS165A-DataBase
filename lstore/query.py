@@ -136,7 +136,7 @@ class Query:
     # Assume that select will never be called on a key that doesn't exist
     """
     def select(self, search_key, search_key_index, projected_columns_index):
-        if (not self.table.base_page_range_dict.has_key(search_key_index)):
+        if search_key_index not in self.table.base_page_range_dict:
             return False
         
         i = 0
@@ -159,7 +159,7 @@ class Query:
             data_package = []
             latest_update_record_rid = self.get_page_value(self.get_base_data_address(primary_key, self.table.indirection_index))
             for column_index in column_index_list:
-                if self.table.index.tail_page_indices[column_index].has_key[latest_update_record_rid]:
+                if self.table.index.tail_page_indices[column_index].has_key(latest_update_record_rid):
                     data_package.append(self.get_page_value(self.get_tail_data_address(latest_update_record_rid, column_index)))
             record = Record(self.get_page_value(self.get_base_data_address(primary_key, self.table.rid_index)), primary_key, data_package)
             result_record_list.append(record)
