@@ -31,7 +31,7 @@ update_cols = [
 ]
 
 update_time_0 = process_time()
-for i in range(0, 100000):
+for i in range(0, 1000000):
     query.update(choice(keys), *(choice(update_cols)))
     #print('This is update iteration', i)
 update_time_1 = process_time()
