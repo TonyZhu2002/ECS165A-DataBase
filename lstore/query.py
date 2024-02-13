@@ -181,12 +181,6 @@ class Query:
               # then update base record's indirection to tail record's rid
             tail_indirection = base_indirection
             self.modify_page_value(base_indirection_address, rid)
-        
-        # If this is not our first update, then we copy the previous update's schema encoding
-        if not first_update:
-            if self.table.index.tail_page_indices[se_index].has_key(tail_indirection):
-                schema_encoding_init = list(self.table.index.tail_page_indices[se_index][tail_indirection])
-        print("No First Update: ", schema_encoding_init)
             
         data = [None] * (self.table.num_columns - 4)
         
@@ -203,9 +197,14 @@ class Query:
                 else:
                     if self.table.index.tail_page_indices[i].has_key(tail_indirection):
                         data[i] = self.table.index.tail_page_indices[i][tail_indirection]
+                        if self.table.index.base_page_indices[i].has_key(primary_key):
+                            if self.table.index.tail_page_indices[i][tail_indirection] != self.table.index.base_page_indices[i][primary_key]:
+                                schema_encoding_init[i] = '1'
         
-        print("After Adjustment: ", schema_encoding_init)
+        print("Before Adjustment: ", schema_encoding_init)
         schema_encoding = ''.join(schema_encoding_init)
+        print("After Adjustment: ", schema_encoding)
+        print("Type: ", type(schema_encoding))
         time_stamp = int(time())
         
         data = list(data) + [tail_indirection, rid, time_stamp, schema_encoding]
