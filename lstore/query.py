@@ -233,9 +233,12 @@ class Query:
     def sum(self, start_range, end_range, aggregate_column_index):
         result = 0
         terminate_key = 0
+        indirection_index = self.table.indirection_index
         for i in range(start_range, end_range + 1):
             if self.table.index.base_page_indices[aggregate_column_index].has_key(i):
-                result += self.get_page_value(self.get_base_data_address(i, aggregate_column_index))
+                base_indirection = self.get_page_value(self.get_base_data_address(i, indirection_index))
+                if self.table.index.tail_page_indices[aggregate_column_index].has_key(base_indirection):
+                    result += self.get_page_value(self.get_tail_data_address(base_indirection, aggregate_column_index))
             else:
                 terminate_key = i
                 break
