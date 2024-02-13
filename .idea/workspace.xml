@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c3c41835-c226-46b5-83f8-4e018deae482" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/__main__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lstore/query.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstore/query.py" afterDir="false" />
-    </list>
+    <list default="true" id="c3c41835-c226-46b5-83f8-4e018deae482" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -49,7 +46,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1707718152491</updated>
-      <workItem from="1707718153562" duration="8409000" />
+      <workItem from="1707718153562" duration="8518000" />
     </task>
     <servers />
   </component>
