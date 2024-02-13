@@ -99,3 +99,11 @@ class PageRange:
     '''
     def get_page(self, index) -> Page:
         return self.pages[index]
+    
+    def readall(self) -> list:
+        data_list = []
+        for page in self.pages:
+            current_list = page.readall()
+            for data in current_list:
+                data_list.append(data)
+        return data_list

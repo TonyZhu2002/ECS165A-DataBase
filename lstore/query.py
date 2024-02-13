@@ -130,8 +130,11 @@ class Query:
             return False
         pagerange_list = self.table.base_page_range_dict[search_key_index]
         data_list = []
-        for page in pagerange_list:
-            data_list = page.readall()
+        for pagerange in pagerange_list:
+            current_list = pagerange.readall()
+            for data in current_list:
+                data_list.append(data)
+                
 
 
                 
