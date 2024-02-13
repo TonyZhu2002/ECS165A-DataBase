@@ -170,7 +170,7 @@ class Query:
                 delete_detect = False
         
         if delete_detect:
-            rid = 0
+            rid = -1
             self.modify_page_value(base_indirection_address, rid)
             return True
         
