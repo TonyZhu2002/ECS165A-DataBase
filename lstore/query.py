@@ -159,7 +159,7 @@ class Query:
             data_package = []
             latest_update_record_rid = self.get_page_value(self.get_base_data_address(primary_key, self.table.indirection_index))
             for column_index in column_index_list:
-                if latest_update_record_rid == '0':
+                if latest_update_record_rid == 0:
                     data_package.append(self.get_page_value(self.get_base_data_address(primary_key, column_index)))
                 if self.table.index.tail_page_indices[column_index].has_key(latest_update_record_rid):
                     data_package.append(self.get_page_value(self.get_tail_data_address(latest_update_record_rid, column_index)))
