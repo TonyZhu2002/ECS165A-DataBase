@@ -159,7 +159,7 @@ class Query:
                 if (not is_in_base_page):
                     tail_record_rid = self.get_page_value(base_page_indirection_tree[primary_key])
                     rid = self.get_page_value(tail_page_rid_tree[tail_record_rid])
-                    if (search_key != tail_page_search_key_tree[tail_record_rid]):
+                    if (search_key != self.get_page_value(tail_page_search_key_tree[tail_record_rid])):
                         continue
                 else:
                     rid = self.get_page_value(base_page_rid_tree[primary_key])
@@ -249,8 +249,6 @@ class Query:
             if columns[i] != None:
                 data_init[i] = columns[i]
                 schema_encoding_init[i] = '1'
-
-        print("Current Update Columns: ", data_init)
         
         for i in range(self.table.num_columns):
             if data_init[i] == None:
