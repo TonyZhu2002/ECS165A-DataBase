@@ -205,9 +205,7 @@ class Query:
         if self.get_page_value(self.get_base_data_address(primary_key, indirection_index)) < 10000:
             return False
         
-        indirection_tree = self.table.index.base_page_indices[indirection_index]
-        base_indirection_address = indirection_tree[primary_key]
-        base_indirection = self.get_page_value(base_indirection_address)
+        base_indirection = self.get_page_value(self.get_base_data_address(primary_key, indirection_index))
         
         # Compatible with Delete Function
         delete_detect = True
@@ -218,7 +216,7 @@ class Query:
         
         if delete_detect:
             rid = -1
-            self.modify_page_value(base_indirection_address, rid)
+            self.modify_page_value(self.get_base_data_address(primary_key, indirection_index), rid)
             return True
         
         rid = self.table.current_rid
@@ -229,17 +227,15 @@ class Query:
         
         # If we never updated the record before
         if base_indirection == 0: # Let base record and tail record's indirections point to each other
-            self.modify_page_value(base_indirection_address, rid)
+            self.modify_page_value(self.get_base_data_address(primary_key, indirection_index), rid)
             # Use rid tree to find the base record's rid and assign this rid to the indirection column of new record
-            rid_tree = self.table.index.base_page_indices[rid_index]
-            base_rid_address = rid_tree[primary_key]
-            tail_indirection = self.get_page_value(base_rid_address)
+            tail_indirection = self.get_page_value(self.get_base_data_address(primary_key, rid_index))
             first_update = True
         # If we updated the record before
         else: # Let tail record's indirection points to the orginal base record's indirection, 
               # then update base record's indirection to tail record's rid
             tail_indirection = base_indirection
-            self.modify_page_value(base_indirection_address, rid)
+            self.modify_page_value(self.get_base_data_address(primary_key, indirection_index), rid)
         
         data_init = [None] * (self.table.num_columns - 4)
         
