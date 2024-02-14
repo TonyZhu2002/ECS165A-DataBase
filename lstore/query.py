@@ -115,7 +115,7 @@ class Query:
             return False
         
         # Setup the metadata
-        indirection = '0'
+        indirection = 0
         rid = self.table.current_rid
         self.table.current_rid += 1
         time_stamp = int(time())
@@ -228,7 +228,7 @@ class Query:
         first_update = False
         
         # If we never updated the record before
-        if base_indirection == '0': # Let base record and tail record's indirections point to each other
+        if base_indirection == 0: # Let base record and tail record's indirections point to each other
             self.modify_page_value(base_indirection_address, rid)
             # Use rid tree to find the base record's rid and assign this rid to the indirection column of new record
             rid_tree = self.table.index.base_page_indices[rid_index]
