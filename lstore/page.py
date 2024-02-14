@@ -3,7 +3,7 @@ import struct
 
 class Page:
 
-    def __init__(self, column_index, page_range_index, page_index, table_key_index, is_base_page,):
+    def __init__(self, column_index, page_range_index, page_index, table_key_index, schema_encoding_index, num_col, is_base_page):
         self.num_records = 0
         self.data = bytearray(MAX_PAGE_SIZE)
         self.column_index = column_index
@@ -11,6 +11,8 @@ class Page:
         self.page_index = page_index
         self.is_base_page = is_base_page
         self.table_key_index = table_key_index
+        self.schema_encoding_index = schema_encoding_index
+        self.num_col = num_col
 
     '''
     # Check if the page has capacity for more records
@@ -59,9 +61,13 @@ class Page:
     # :param index: int     #The index of the value to be retrieved
     # :return: int          #The value at the given index
     '''  
-    def get_value(self, index) -> int:
+    def get_value(self, index):
         begin = index * 4
-        return struct.unpack("i", self.data[begin : begin + 4])[0]
+        value = struct.unpack("i", self.data[begin : begin + 4])[0]
+        if (self.column_index == self.schema_encoding_index):
+            value = str(value)
+            value = value.rjust(self.num_col - 4, '0')
+        return value
     
 class PageRange:
     def __init__(self, max_capacity):

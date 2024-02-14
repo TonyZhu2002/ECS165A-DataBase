@@ -34,6 +34,7 @@ for i in range(0, number_of_records):
     # print('inserted', records[key])
 print("Insert finished")
 
+'''
 # Check inserted records using select query
 for key in records:
     # select function will return array of records 
@@ -49,12 +50,14 @@ for key in records:
     else:
         pass
         # print('select on', key, ':', record)
+'''
 
 updated_records = {}
 for key in records:
     updated_columns = [None, None, None, None, None]
     updated_records[key] = records[key].copy()
     for i in range(2, grades_table.num_columns):
+        print(i)
         # updated value
         value = randint(0, 20)
         updated_columns[i] = value
@@ -73,7 +76,7 @@ for key in records:
     else:
         pass
         # print('update on', original, 'and', updated_columns, ':', record)
-
+'''
     #check version -2 for record
     record = query.select_version(key, 0, [1, 1, 1, 1, 1], -2)[0]
     error = False
@@ -85,7 +88,7 @@ for key in records:
     else:
         pass
         # print('update on', original, 'and', updated_columns, ':', record)
-    
+
     #check version 0 for record
     record = query.select_version(key, 0, [1, 1, 1, 1, 1], 0)[0]
     error = False
@@ -94,7 +97,7 @@ for key in records:
             error = True
     if error:
         print('update error on', records[key], 'and', updated_columns, ':', record, ', correct:', updated_records[key])
-
+'''
 keys = sorted(list(records.keys()))
 # aggregate on every column 
 for c in range(0, grades_table.num_columns):

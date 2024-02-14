@@ -2,6 +2,7 @@ from lstore.table import Table, Record
 from lstore.index import Index
 from BTrees.OOBTree import OOBTree
 from lstore.config import *
+from copy import deepcopy
 from time import time
 
 
@@ -75,17 +76,7 @@ class Query:
         record_index = address[4]
         page_dict = self.table.base_page_range_dict if is_base_page else self.table.tail_page_range_dict
         return page_dict[column_index][page_range_index].get_page(page_index).get_value(record_index)
-    
 
-    def get_primary_key_address(self, search_key, search_key_index, is_base = True):
-        if is_base:
-            pagerange_list = self.table.base_page_range_dict[search_key_index]
-        else:
-            pagerange_list = self.table.tail_page_range_dict[search_key_index]
-        address_list = []
-        for pagerange in pagerange_list:
-            pagerange.get_primary_key_address(search_key, address_list)
-        return address_list
     """
     # internal Method
     # Read a record with specified RID
@@ -135,36 +126,54 @@ class Query:
     # Returns False if record locked by TPL
     # Assume that select will never be called on a key that doesn't exist
     """
-    def select(self, search_key, search_key_index, projected_columns_index):
-        if (not self.table.index.base_page_indices[search_key_index].has_key(search_key_index)):
-            return False
-        
-        i = 0
-        column_index_list = []
-        for val in projected_columns_index:
-            if val == 1:
-                column_index_list.append(i)
-            i += 1
-        
-        address_list = self.get_primary_key_address(search_key, search_key_index, True)
-        primary_key_list = []
-        
-        for address in address_list:
-            value = self.get_page_value(address)
-            primary_key_list.append(value)
-        
-        result_record_list = []
-        
-        for primary_key in primary_key_list:
-            data_package = []
-            latest_update_record_rid = self.get_page_value(self.get_base_data_address(primary_key, self.table.indirection_index))
-            for column_index in column_index_list:
-                if self.table.index.tail_page_indices[column_index].has_key(latest_update_record_rid):
-                    data_package.append(self.get_page_value(self.get_tail_data_address(latest_update_record_rid, column_index)))
-            record = Record(self.get_page_value(self.get_base_data_address(primary_key, self.table.rid_index)), primary_key, data_package)
-            result_record_list.append(record)
-        
-        return result_record_list
+    def select(self, search_key, search_key_index, projected_columns_index): 
+
+        select_result = []
+
+        for pagerange in self.table.base_page_range_dict[search_key_index]:
+            address_list = []
+            pagerange.get_primary_key_address(search_key, address_list)
+            #print(address_list)
+
+            base_page_schema_encode_tree = self.table.index.base_page_indices[self.table.schema_encoding_index]
+            base_page_indirection_tree = self.table.index.base_page_indices[self.table.indirection_index]
+            base_page_rid_tree = self.table.index.base_page_indices[self.table.rid_index]
+            tail_page_search_key_tree = self.table.index.tail_page_indices[search_key_index]
+            tail_page_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
+
+            for primary_key_address in address_list:
+                data_package = []
+                primary_key = self.get_page_value(primary_key_address)
+                schema_encoding = self.get_page_value(base_page_schema_encode_tree[primary_key])
+                if (schema_encoding == (self.table.num_columns - 4) * '0'):
+                    is_in_base_page = True
+                else:
+                    is_in_base_page = False
+
+                rid = None
+                
+
+                if (not is_in_base_page):
+                    tail_record_rid = self.get_page_value(base_page_indirection_tree[primary_key])
+                    rid = self.get_page_value(tail_page_rid_tree[tail_record_rid])
+                    if (search_key != tail_page_search_key_tree[tail_record_rid]):
+                        continue
+                else:
+                    rid = self.get_page_value(base_page_rid_tree[primary_key])
+
+                for i in range(len(projected_columns_index)):
+                    if (projected_columns_index[i] == 1):
+                        if (schema_encoding[i] == '0'):
+                            data_package.append(self.get_page_value(self.get_base_data_address(primary_key, i)))
+                        else:
+                            data_package.append(self.get_page_value(self.get_tail_data_address(rid, i)))
+                
+                select_result.append(Record(rid, primary_key, deepcopy(data_package)))
+                print(data_package)
+        return select_result
+            
+            
+                    
         
 
 
