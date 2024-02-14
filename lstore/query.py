@@ -148,6 +148,8 @@ class Query:
                 schema_encoding = self.get_page_value(base_page_schema_encode_tree[primary_key])
                 if (schema_encoding == (self.table.num_columns) * '0'):
                     is_in_base_page = True
+                elif (schema_encoding == (self.table.num_columns) * '2'):
+                    continue    
                 else:
                     is_in_base_page = False
 
