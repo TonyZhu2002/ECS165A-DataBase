@@ -209,9 +209,11 @@ class Query:
         if not self.table.index.base_page_indices[key_index].has_key(primary_key):
             return False
         
-        if self.get_page_value(self.get_base_data_address(primary_key, indirection_index)) < 10000:
-             return False
-        
+        deletion_detect = '2' * (self.table.num_columns)
+
+        if self.get_page_value(self.get_base_data_address(primary_key, se_index)) == deletion_detect:
+            return False
+
         base_indirection = self.get_page_value(self.get_base_data_address(primary_key, indirection_index))
         
         # Compatible with Delete Function
@@ -220,11 +222,6 @@ class Query:
         for i in range(self.table.num_columns):
             if columns[i] != None:
                 delete_detect = False
-        
-        if delete_detect:
-            rid = -1
-            self.modify_page_value(self.get_base_data_address(primary_key, indirection_index), rid)
-            return True
         
         rid = self.table.current_rid
         self.table.current_rid += 1
@@ -250,12 +247,15 @@ class Query:
             if columns[i] != None:
                 data_init[i] = columns[i]
                 schema_encoding_init[i] = '1'
+
+        print("Current Update Columns: ", data_init)
         
         for i in range(self.table.num_columns):
             if data_init[i] == None:
                 if(first_update):
                     if self.table.index.base_page_indices[i].has_key(primary_key):
                         data_init[i] = self.get_page_value(self.get_base_data_address(primary_key, i))
+
                 else:
                     if self.table.index.tail_page_indices[i].has_key(tail_indirection):
                         data_init[i] = self.get_page_value(self.get_tail_data_address(tail_indirection, i))
@@ -265,11 +265,15 @@ class Query:
         
         schema_encoding = ''.join(schema_encoding_init)
         
+        if delete_detect:
+            data_init = [None] * (self.table.num_columns)
+            schema_encoding = '2' * (self.table.num_columns)
+        
         self.modify_page_value(self.get_base_data_address(primary_key, se_index), schema_encoding)
         
         time_stamp = int(time())
         
-        data = list(data_init) + [tail_indirection, rid, time_stamp, schema_encoding]
+        data = data_init + [tail_indirection, rid, time_stamp, schema_encoding]
         record = Record(rid, key, data)
         self.table.write_tail_record(record)
         return True
