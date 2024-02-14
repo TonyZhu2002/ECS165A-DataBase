@@ -258,7 +258,7 @@ class Query:
         
         schema_encoding = ''.join(schema_encoding_init)
         
-        self.modify_page_value(self.get_base_data_address(primary_key, self.table.schema_encoding_index), schema_encoding)
+        self.modify_page_value(self.get_base_data_address(primary_key, se_index), schema_encoding)
         
         time_stamp = int(time())
         
