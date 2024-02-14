@@ -83,5 +83,16 @@ for c in range(0, grades_table.num_columns):
         if column_sum != result:
             print('sum error on [', keys[r[0]], ',', keys[r[1]], ']: ', result, ', correct: ', column_sum)
         else:
-            # pass
-            print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
+            pass
+            # print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
+
+# Deleting records and verifying
+for key in list(records.keys()):
+    result = query.delete(key)
+    if not result:
+        print(f"Delete error on key: {key}")
+    else:
+        # Verify deletion by attempting to select the deleted record
+        select_result = query.select(key, 0, [1, 1, 1, 1, 1])
+        if select_result:
+            print(f"Record with key: {key} was not deleted properly.")
