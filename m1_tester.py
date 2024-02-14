@@ -83,5 +83,5 @@ for c in range(0, grades_table.num_columns):
         if column_sum != result:
             print('sum error on [', keys[r[0]], ',', keys[r[1]], ']: ', result, ', correct: ', column_sum)
         else:
-            pass
-            #print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
+            # pass
+            print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)

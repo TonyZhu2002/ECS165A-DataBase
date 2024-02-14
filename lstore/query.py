@@ -309,11 +309,9 @@ class Query:
                     result += self.get_page_value(self.get_tail_data_address(base_indirection, aggregate_column_index))
             else:
                 terminate_key = i
-                break
-        if terminate_key == start_range:
-            return False
-        else:
-            return result
+                if terminate_key == start_range:
+                    return False
+        return result
 
     """
     :param start_range: int         # Start of the key range to aggregate 
