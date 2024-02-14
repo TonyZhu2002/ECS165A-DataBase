@@ -8,8 +8,8 @@ class Index:
 
     def __init__(self, table):
         # One index for each table. All our empty initially.
-        self.base_page_indices = [None] * table.num_columns
-        self.tail_page_indices = [None] * table.num_columns
+        self.base_page_indices = [None] * table.num_all_columns
+        self.tail_page_indices = [None] * table.num_all_columns
         if (self.base_page_indices[table.key] == None):
             self.base_page_indices[table.key] = OOBTree()
         if (self.tail_page_indices[table.key] == None):

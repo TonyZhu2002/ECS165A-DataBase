@@ -25,7 +25,7 @@ class Query:
     # :return: list               #The address of the base data
     '''
     def get_base_data_address(self, primary_key, column_index) -> list:
-        if column_index >= self.table.num_columns:
+        if column_index >= self.table.num_all_columns:
             raise ValueError("Column index out of range")
         tree = self.table.index.base_page_indices[column_index]
         if not tree.has_key(primary_key):
@@ -40,7 +40,7 @@ class Query:
     # :return: list               #The address of the tail data
     '''
     def get_tail_data_address(self, rid, column_index) -> list:
-        if column_index >= self.table.num_columns:
+        if column_index >= self.table.num_all_columns:
             raise ValueError("Column index out of range")
         tree = self.table.index.tail_page_indices[column_index]
         if not tree.has_key(rid):
@@ -84,7 +84,7 @@ class Query:
     # Return False if record doesn't exist or is locked due to 2PL
     """
     def delete(self, primary_key):
-        null_columns = [None] * (self.table.num_columns - 4)
+        null_columns = [None] * (self.table.num_columns)
         key_index = self.table.key
         if self.table.index.base_page_indices[key_index].has_key(primary_key):
             self.update(primary_key, *null_columns)
@@ -110,7 +110,7 @@ class Query:
         rid = self.table.current_rid
         self.table.current_rid += 1
         time_stamp = int(time())
-        schema_encoding = '0' * (self.table.num_columns - 4)
+        schema_encoding = '0' * (self.table.num_columns)
         
         data = list(columns) + [indirection, rid, time_stamp, schema_encoding]
         record = Record(rid, key, data)
@@ -145,7 +145,7 @@ class Query:
                 data_package = []
                 primary_key = self.get_page_value(primary_key_address)
                 schema_encoding = self.get_page_value(base_page_schema_encode_tree[primary_key])
-                if (schema_encoding == (self.table.num_columns - 4) * '0'):
+                if (schema_encoding == (self.table.num_columns) * '0'):
                     is_in_base_page = True
                 else:
                     is_in_base_page = False
@@ -217,7 +217,7 @@ class Query:
         # Compatible with Delete Function
         delete_detect = True
         
-        for i in range(self.table.num_columns - 4):
+        for i in range(self.table.num_columns):
             if columns[i] != None:
                 delete_detect = False
         
@@ -228,7 +228,7 @@ class Query:
         
         rid = self.table.current_rid
         self.table.current_rid += 1
-        schema_encoding_init = ['0'] * (self.table.num_columns - 4) # Assume this is our first update
+        schema_encoding_init = ['0'] * (self.table.num_columns) # Assume this is our first update
         
         first_update = False
         
@@ -244,14 +244,14 @@ class Query:
             tail_indirection = base_indirection
             self.modify_page_value(self.get_base_data_address(primary_key, indirection_index), rid)
         
-        data_init = [None] * (self.table.num_columns - 4)
+        data_init = [None] * (self.table.num_columns)
         
-        for i in range(self.table.num_columns - 4):
+        for i in range(self.table.num_columns):
             if columns[i] != None:
                 data_init[i] = columns[i]
                 schema_encoding_init[i] = '1'
         
-        for i in range(self.table.num_columns - 4):
+        for i in range(self.table.num_columns):
             if data_init[i] == None:
                 if(first_update):
                     if self.table.index.base_page_indices[i].has_key(primary_key):

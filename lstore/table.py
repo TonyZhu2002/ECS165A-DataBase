@@ -20,7 +20,8 @@ class Table:
     def __init__(self, name, num_columns, key):
         self.name = name
         self.key = key
-        self.num_columns = num_columns + 4
+        self.num_columns = num_columns
+        self.num_all_columns = num_columns + 4
         self.indirection_index = self.num_columns - 4
         self.rid_index = self.num_columns - 3
         self.time_stamp_index = self.num_columns - 2
@@ -47,12 +48,12 @@ class Table:
 
 
         # Initialize the page range list
-        for i in range(self.num_columns):
+        for i in range(self.num_all_columns):
             self.__create_page(i, True)
             self.__create_page(i, False)
         
         # Create index for the every column 
-        for i in range(self.num_columns):
+        for i in range(self.num_all_columns):
             if (i != self.key):
                 self.index.create_index(i)
                 
@@ -112,7 +113,7 @@ class Table:
             page_range_dict[column_index].append(PageRange(MAX_PAGE_RANGE))
         page_range_index = (self.page_count_dict[column_index][i] - 1) // MAX_PAGE_RANGE
         page_index = (self.page_count_dict[column_index][i] - 1) % MAX_PAGE_RANGE
-        page_range_dict[column_index][-1].add_page(Page(column_index, page_range_index, page_index, self.key, self.schema_encoding_index, self.num_columns, is_base_page))
+        page_range_dict[column_index][-1].add_page(Page(column_index, page_range_index, page_index, self.key, self.schema_encoding_index, self.num_all_columns, is_base_page))
                                
     def __merge(self):
         print("merge is happening")
