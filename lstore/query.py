@@ -84,6 +84,7 @@ class Query:
     # Return False if record doesn't exist or is locked due to 2PL
     """
     def delete(self, primary_key):
+
         null_columns = [None] * (self.table.num_columns)
         key_index = self.table.key
         if self.table.index.base_page_indices[key_index].has_key(primary_key):
@@ -169,7 +170,6 @@ class Query:
                             data_package.append(self.get_page_value(self.get_tail_data_address(rid, i)))
                 
                 select_result.append(Record(rid, primary_key, deepcopy(data_package)))
-                print(data_package)
         return select_result
             
             
@@ -210,7 +210,7 @@ class Query:
             return False
         
         if self.get_page_value(self.get_base_data_address(primary_key, indirection_index)) < 10000:
-            return False
+             return False
         
         base_indirection = self.get_page_value(self.get_base_data_address(primary_key, indirection_index))
         

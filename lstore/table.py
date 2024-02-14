@@ -22,10 +22,10 @@ class Table:
         self.key = key
         self.num_columns = num_columns
         self.num_all_columns = num_columns + 4
-        self.indirection_index = self.num_columns - 4
-        self.rid_index = self.num_columns - 3
-        self.time_stamp_index = self.num_columns - 2
-        self.schema_encoding_index = self.num_columns - 1
+        self.indirection_index = self.num_all_columns - 4
+        self.rid_index = self.num_all_columns - 3
+        self.time_stamp_index = self.num_all_columns - 2
+        self.schema_encoding_index = self.num_all_columns - 1
         
         # Initialize the page range dictionary
         # The key is the column index
