@@ -60,6 +60,7 @@ for i in range(0, 100000):
 select_time_1 = process_time()
 print("Selecting 100k records took:  \t\t\t", select_time_1 - select_time_0)
 
+print("Total database time:" , (select_time_1 - select_time_0) + (agg_time_1 - agg_time_0) + (delete_time_1 - delete_time_0) + (update_time_1 - update_time_0))
 # Measuring Aggregate Performance
 
 
