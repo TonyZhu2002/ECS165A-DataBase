@@ -145,7 +145,7 @@ class Query:
             if val == 1:
                 column_index_list.append(i)
             i += 1
-        
+
         address_list = self.get_primary_key_address(search_key, search_key_index, True)
         primary_key_list = []
         
