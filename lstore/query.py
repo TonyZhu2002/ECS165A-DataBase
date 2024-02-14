@@ -263,13 +263,21 @@ class Query:
                             if self.get_page_value(self.get_tail_data_address(tail_indirection, i)) != self.get_page_value(self.get_base_data_address(primary_key, i)):
                                 schema_encoding_init[i] = '1'
         
+        print("Data after updated: ", data_init)
+        
         schema_encoding = ''.join(schema_encoding_init)
+        
+        print("SE after update: ", schema_encoding)
         
         if delete_detect:
             data_init = [None] * (self.table.num_columns)
             schema_encoding = '2' * (self.table.num_columns)
         
+        print("Data after check: ", data_init)
+        
         self.modify_page_value(self.get_base_data_address(primary_key, se_index), schema_encoding)
+        
+        print("SE after update for base record: ", self.get_page_value(self.get_base_data_address(primary_key, se_index)))
         
         time_stamp = int(time())
         
