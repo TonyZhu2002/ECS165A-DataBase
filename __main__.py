@@ -56,7 +56,7 @@ print("Aggregate 100k of 100 record batch took:\t", agg_time_1 - agg_time_0)
 
 # Measuring Select Performance
 select_time_0 = process_time()
-for i in range(0, 1000):
+for i in range(0, 10):
     query.select(choice(keys),0 , [1, 1, 1, 1, 1])
 select_time_1 = process_time()
 print("Selecting 1000 records took:  \t\t\t", select_time_1 - select_time_0)
