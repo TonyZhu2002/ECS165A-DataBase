@@ -301,6 +301,7 @@ class Query:
          # this function is only called on the primary key.
          # Returns the summation of the given range upon success
          # Returns False if no record exists in the given range
+         # This function doesn't consider the situation that if the first record is none
          """
         result = 0
         terminate_key = 0
