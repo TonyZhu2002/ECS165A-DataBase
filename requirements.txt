@@ -1,3 +1,4 @@
 colorama
 BTrees~=5.2
 gradio~=4.19.0
+prettytable~=3.9.0
