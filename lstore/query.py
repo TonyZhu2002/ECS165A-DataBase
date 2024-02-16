@@ -147,7 +147,7 @@ class Query:
         key_index = self.table.key
         key = columns[key_index]
 
-        if self.table.index.base_page_indices[key_index].has_key(key):
+        if self.table.index.base_page_indices[key_index].has_key(key) and self.get_page_value(self.get_base_data_address(key, self.table.schema_encoding_index)) != '2' * (self.table.num_columns):
             return False
 
         # Setup the metadata
