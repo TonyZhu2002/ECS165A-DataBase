@@ -110,11 +110,13 @@ class Query:
             if (len(address_list) == 0):
                 continue
             primary_key = self.get_page_value(address_list[0])
+            
             target_record_list = self.select(primary_key, self.table.key, [1] * self.table.num_columns)
             if (len(target_record_list) == 0):
                 continue
             for column in target_record_list[0].columns:
                 current_record_list.append(column)
+            record_list.append(current_record_list)
         return record_list
             
     def delete(self, primary_key):
