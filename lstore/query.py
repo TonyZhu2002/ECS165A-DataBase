@@ -94,13 +94,15 @@ class Query:
         
         if (current_rid == 10000):
             return [[]]
-        
+        print(current_rid)
         for i in range (10000, current_rid):
             current_record_list = []
             tail_page_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
-            if (not tail_page_rid_tree.has_key(i)):
+            if (tail_page_rid_tree.has_key(i)):
                 continue # Not a base record
             target_record_list = self.select(i, self.table.rid_index, [1] * self.table.num_columns)
+            if (len(target_record_list) == 0):
+                continue # a deleted record
             for column in target_record_list[0].columns:
                 current_record_list.append(column)
             record_list.append(current_record_list)
