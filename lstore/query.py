@@ -337,19 +337,21 @@ class Query:
         result = 0
         terminate_key = 0
         indirection_index = self.table.indirection_index
+        record_existence = False
         for i in range(start_range, end_range + 1):
             if self.table.index.base_page_indices[aggregate_column_index].has_key(i):
                 base_indirection = self.get_page_value(self.get_base_data_address(i, indirection_index))
                 if base_indirection == 0:
                     result += self.get_page_value(self.get_base_data_address(i, aggregate_column_index))
+                    record_existence = True
                     continue
                 if self.table.index.tail_page_indices[aggregate_column_index].has_key(base_indirection):
                     result += self.get_page_value(self.get_tail_data_address(base_indirection, aggregate_column_index))
-            else:
-                terminate_key = i
-                if terminate_key == start_range:
-                    return False
-        return result
+                    record_existence = True
+        if record_existence:
+            return result
+        else:
+            return False
 
 
 
