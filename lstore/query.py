@@ -18,15 +18,14 @@ class Query:
         self.table = table
         pass
 
-    '''
-    # Internal Method
-    # Get the address of the base data for the given primary key and column index
-    # :param primary_key: int     #The primary key of the record
-    # :param column_index: int    #The index of the column
-    # :return: list               #The address of the base data
-    '''
-
     def get_base_data_address(self, primary_key, column_index) -> list:
+        """
+        # Internal Method
+        # Get the address of the base data for the given primary key and column index
+        # :param primary_key: int     #The primary key of the record
+        # :param column_index: int    #The index of the column
+        # :return: list               #The address of the base data
+        """
         if column_index >= self.table.num_all_columns:
             raise ValueError("Column index out of range")
         tree = self.table.index.base_page_indices[column_index]
@@ -34,15 +33,14 @@ class Query:
             return None
         return tree[primary_key]
 
-    '''
-    # Internal Method
-    # Get the address of the tail data for the given rid and column index
-    # :param rid: int             #The rid of the record
-    # :param column_index: int    #The index of the column
-    # :return: list               #The address of the tail data
-    '''
-
     def get_tail_data_address(self, rid, column_index) -> list:
+        """
+        # Internal Method
+        # Get the address of the tail data for the given rid and column index
+        # :param rid: int             #The rid of the record
+        # :param column_index: int    #The index of the column
+        # :return: list               #The address of the tail data
+        """
         if column_index >= self.table.num_all_columns:
             raise ValueError("Column index out of range")
         tree = self.table.index.tail_page_indices[column_index]
@@ -50,14 +48,13 @@ class Query:
             return None
         return tree[rid]
 
-    '''
-    # Internal Method
-    # Modify the value at the given address in a page
-    # :param address: list     #The address of the value to be modified
-    # :param value: int        #The value to be modified
-    '''
-
     def modify_page_value(self, address: list, value):
+        """
+         # Internal Method
+         # Modify the value at the given address in a page
+         # :param address: list     #The address of the value to be modified
+         # :param value: int        #The value to be modified
+        """
         is_base_page = address[0]
         column_index = address[1]
         page_range_index = address[2]
@@ -66,15 +63,13 @@ class Query:
         page_dict = self.table.base_page_range_dict if is_base_page else self.table.tail_page_range_dict
         page_dict[column_index][page_range_index].get_page(page_index).modify_value(value, record_index)
 
-    '''
-    # Internal Method
-    # Get the value at the given address in a page
-    # :param address: list     #The address of the value to be retrieved
-    # :return: int             #The value at the given address
-    '''
-
     def get_page_value(self, address: list) -> int:
-
+        """
+         # Internal Method
+         # Get the value at the given address in a page
+         # :param address: list     #The address of the value to be retrieved
+         # :return: int             #The value at the given address
+        """
         is_base_page = address[0]
         column_index = address[1]
         page_range_index = address[2]
@@ -83,34 +78,33 @@ class Query:
         page_dict = self.table.base_page_range_dict if is_base_page else self.table.tail_page_range_dict
         return page_dict[column_index][page_range_index].get_page(page_index).get_value(record_index)
 
-
-    '''
-    # Traverse the table and return all latest records
-    # :return: list               #The list of all latest records
-    '''
     def traverse_table(self) -> list:
-        num_base_record = 0 
+        """
+        # Traverse the table and return all latest records
+        # :return: list               #The list of all latest records
+        """
+        num_base_record = 0
         current_rid = self.table.current_rid
         record_list = []
-        
+
         if (current_rid == 10000):
             return [[]]
-        #print(current_rid)
-        for i in range (10000, current_rid):
+        # print(current_rid)
+        for i in range(10000, current_rid):
             current_record_list = []
             tail_page_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
             if (tail_page_rid_tree.has_key(i)):
-                continue # Not a base record
+                continue  # Not a base record
             num_base_record += 1
             address_list = []
             rid_dict = self.table.base_page_range_dict[self.table.rid_index]
-            
+
             for pagerange in rid_dict:
                 pagerange.get_primary_key_address(i, address_list)
             if (len(address_list) == 0):
                 continue
             primary_key = self.get_page_value(address_list[0])
-            
+
             target_record_list = self.select(primary_key, self.table.key, [1] * self.table.num_columns)
             if (len(target_record_list) == 0):
                 continue
@@ -118,36 +112,36 @@ class Query:
                 current_record_list.append(column)
             record_list.append(current_record_list)
         return record_list
-            
+
     def delete(self, primary_key):
         """
         # internal Method
         # Read a record with specified RID
-        # Returns True upon succesful deletion
+        # Returns True upon successful deletion
         # Return False if record doesn't exist or is locked due to 2PL
         """
         null_columns = [None] * (self.table.num_columns)
         key_index = self.table.key
         schema_encoding = '2' * (self.table.num_columns)
         if self.table.index.base_page_indices[key_index].has_key(primary_key):
-            self.modify_page_value(self.get_base_data_address(primary_key, self.table.schema_encoding_index), schema_encoding)
+            self.modify_page_value(self.get_base_data_address(primary_key, self.table.schema_encoding_index),
+                                   schema_encoding)
             self.update(primary_key, *null_columns)
             return True
         else:
             return False
 
-
-
     def insert(self, *columns) -> bool:
         """
          # Insert a record with specified columns
-         # Return True upon succesful insertion
+         # Return True upon successful insertion
          # Returns False if insert fails for whatever reason
          """
         key_index = self.table.key
         key = columns[key_index]
 
-        if self.table.index.base_page_indices[key_index].has_key(key) and self.get_page_value(self.get_base_data_address(key, self.table.schema_encoding_index)) != '2' * (self.table.num_columns):
+        if self.table.index.base_page_indices[key_index].has_key(key) and self.get_page_value(
+                self.get_base_data_address(key, self.table.schema_encoding_index)) != '2' * (self.table.num_columns):
             return False
 
         # Setup the metadata
@@ -161,8 +155,6 @@ class Query:
         record = Record(rid, key, data)
         self.table.write_base_record(record)
         return True
-
-
 
     def select(self, search_key, search_key_index, projected_columns_index):
         """
@@ -219,8 +211,6 @@ class Query:
                 select_result.append(Record(rid, primary_key, deepcopy(data_package)))
         return select_result
 
-
-
     def select_version(self, search_key, search_key_index, projected_columns_index, relative_version):
         """
         # Read matching record with specified search key
@@ -232,8 +222,9 @@ class Query:
         # Returns False if record locked by TPL
         # Assume that select will never be called on a key that doesn't exist
         """
+        if relative_version == 0:
+            return self.select(search_key, search_key_index, projected_columns_index)
         pass
-
 
 
     def update(self, primary_key, *columns) -> bool:
@@ -299,21 +290,12 @@ class Query:
                         if self.table.index.base_page_indices[i].has_key(primary_key):
                             if self.get_page_value(
                                     self.get_tail_data_address(tail_indirection, i)) != self.get_page_value(
-                                    self.get_base_data_address(primary_key, i)):
+                                self.get_base_data_address(primary_key, i)):
                                 schema_encoding_init[i] = '1'
-
-
 
         schema_encoding = ''.join(schema_encoding_init)
 
-
-
-            
-
-
-
         self.modify_page_value(self.get_base_data_address(primary_key, se_index), schema_encoding)
-
 
         time_stamp = int(time())
 
@@ -321,8 +303,6 @@ class Query:
         record = Record(rid, key, data)
         self.table.write_tail_record(record)
         return True
-
-
 
     def sum(self, start_range, end_range, aggregate_column_index):
         """
@@ -353,8 +333,6 @@ class Query:
         else:
             return False
 
-
-
     def sum_version(self, start_range, end_range, aggregate_column_index, relative_version):
         """
            :param start_range: int         # Start of the key range to aggregate
@@ -366,8 +344,6 @@ class Query:
            # Returns False if no record exists in the given range
            """
         pass
-
-
 
     def increment(self, key, column):
         """

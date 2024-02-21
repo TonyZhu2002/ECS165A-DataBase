@@ -38,7 +38,7 @@ def delete_record(student_id):
 
 
 def sum_record(start_range, end_range, aggregate_column_index):
-    result = query.sum(start_range, end_range, aggregate_column_index)
+    result = query.sum(int(start_range), int(end_range), int(aggregate_column_index))
     if result is not False:
         return str(result)
     return "Sum operation failed or no records in range."
