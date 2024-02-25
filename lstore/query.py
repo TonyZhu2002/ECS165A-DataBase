@@ -18,65 +18,56 @@ class Query:
         self.table = table
         pass
 
-    def get_base_data_address(self, primary_key, column_index) -> list:
-        """
-        # Internal Method
-        # Get the address of the base data for the given primary key and column index
-        # :param primary_key: int     #The primary key of the record
-        # :param column_index: int    #The index of the column
-        # :return: list               #The address of the base data
-        """
-        if column_index >= self.table.num_all_columns:
-            raise ValueError("Column index out of range")
-        tree = self.table.index.base_page_indices[column_index]
-        if not tree.has_key(primary_key):
-            return None
-        return tree[primary_key]
-
-    def get_tail_data_address(self, rid, column_index) -> list:
-        """
-        # Internal Method
-        # Get the address of the tail data for the given rid and column index
-        # :param rid: int             #The rid of the record
-        # :param column_index: int    #The index of the column
-        # :return: list               #The address of the tail data
-        """
-        if column_index >= self.table.num_all_columns:
-            raise ValueError("Column index out of range")
-        tree = self.table.index.tail_page_indices[column_index]
-        if not tree.has_key(rid):
-            return None
-        return tree[rid]
-
-    def modify_page_value(self, address: list, value):
+    def modify_value(self, record_num: int, column_index: int, new_value: int, is_base_page = True):
         """
          # Internal Method
-         # Modify the value at the given address in a page
-         # :param address: list     #The address of the value to be modified
-         # :param value: int        #The value to be modified
+         # Modify the value at the given record number and column index
+         # :param record_num: int       #The record number
+         # :param column_index: int     #The index of the column
+         # :param new_value: int        #The new value
         """
-        is_base_page = address[0]
-        column_index = address[1]
-        page_range_index = address[2]
-        page_index = address[3]
-        record_index = address[4]
-        page_dict = self.table.base_page_range_dict if is_base_page else self.table.tail_page_range_dict
-        page_dict[column_index][page_range_index].get_page(page_index).modify_value(value, record_index)
+        
+        if (is_base_page):
+            page_range_dict = self.table.base_page_range_dict
+        else:
+            page_range_dict = self.table.tail_page_range_dict
+        
+        page_range_list = page_range_dict[column_index]
+        page_index = record_num // MAX_RECORD_PER_PAGE
+        record_index = record_num % MAX_RECORD_PER_PAGE
+        page_range_index = page_index // MAX_PAGE_RANGE
+        page_index_in_range = page_index % MAX_PAGE_RANGE
+        page = page_range_list[page_range_index].get_page(page_index_in_range)
+        
+        page.modify_value(new_value, record_index)
 
-    def get_page_value(self, address: list) -> int:
+    def get_value(self, record_num: int, column_index: int, is_base_page = True) -> int:
         """
-         # Internal Method
-         # Get the value at the given address in a page
-         # :param address: list     #The address of the value to be retrieved
-         # :return: int             #The value at the given address
+        # Internal Method
+        # Get the value at the given record number and column index
+        # :param record_num: int       #The record number
+        # :param column_index: int     #The index of the column
+        # :return: int                 #The value at the given record number and column index
         """
-        is_base_page = address[0]
-        column_index = address[1]
-        page_range_index = address[2]
-        page_index = address[3]
-        record_index = address[4]
-        page_dict = self.table.base_page_range_dict if is_base_page else self.table.tail_page_range_dict
-        return page_dict[column_index][page_range_index].get_page(page_index).get_value(record_index)
+        if (is_base_page):
+            page_range_dict = self.table.base_page_range_dict
+        else:
+            page_range_dict = self.table.tail_page_range_dict
+        
+        page_range_list = page_range_dict[column_index]
+        page_index = record_num // MAX_RECORD_PER_PAGE
+        record_index = record_num % MAX_RECORD_PER_PAGE
+        page_range_index = page_index // MAX_PAGE_RANGE
+        page_index_in_range = page_index % MAX_PAGE_RANGE
+        page = page_range_list[page_range_index].get_page(page_index_in_range)
+        
+        return page.get_value(record_index)
+    
+    def get_record_list(self, record_num: int, start: int, end: int, is_base_page = True) -> list:
+        result = []
+        for i in range(start, end):
+            result.append(self.get_value(record_num, i, is_base_page))
+        return result
 
     def traverse_table(self) -> list:
         """
@@ -139,10 +130,11 @@ class Query:
          """
         key_index = self.table.key
         key = columns[key_index]
-
-        if self.table.index.base_page_indices[key_index].has_key(key) and self.get_page_value(
-                self.get_base_data_address(key, self.table.schema_encoding_index)) != '2' * (self.table.num_columns):
-            return False
+        
+        if self.table.index.base_page_indices[key_index].has_key(key):
+            record_num = self.table.index.base_page_indices[key_index][key][0]
+            if (self.get_value(record_num, self.table.schema_encoding_index) != '2' * (self.table.num_columns)):
+                return False
 
         # Setup the metadata
         indirection = 0
@@ -167,49 +159,34 @@ class Query:
         # Assume that select will never be called on a key that doesn't exist
         """
 
-        select_result = []
+        if (search_key_index == self.table.key):
+            pk_base_tree = self.table.index.base_page_indices[search_key_index]
+            pk_tail_tree = self.table.index.tail_page_indices[search_key_index]
+            rid_tail_tree = self.table.index.tail_page_indices[self.table.rid_index]
 
-        for pagerange in self.table.base_page_range_dict[search_key_index]:
-            address_list = []
-            pagerange.get_primary_key_address(search_key, address_list)
-            # print(address_list)
-
-            base_page_schema_encode_tree = self.table.index.base_page_indices[self.table.schema_encoding_index]
-            base_page_indirection_tree = self.table.index.base_page_indices[self.table.indirection_index]
-            base_page_rid_tree = self.table.index.base_page_indices[self.table.rid_index]
-            tail_page_search_key_tree = self.table.index.tail_page_indices[search_key_index]
-            tail_page_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
-
-            for primary_key_address in address_list:
-                data_package = []
-                primary_key = self.get_page_value(primary_key_address)
-                schema_encoding = self.get_page_value(base_page_schema_encode_tree[primary_key])
-                if (schema_encoding == (self.table.num_columns) * '0'):
-                    is_in_base_page = True
-                elif (schema_encoding == (self.table.num_columns) * '2'):
-                    continue
-                else:
-                    is_in_base_page = False
-
-                rid = None
-
-                if (not is_in_base_page):
-                    tail_record_rid = self.get_page_value(base_page_indirection_tree[primary_key])
-                    rid = self.get_page_value(tail_page_rid_tree[tail_record_rid])
-                    if (search_key != self.get_page_value(tail_page_search_key_tree[tail_record_rid])):
-                        continue
-                else:
-                    rid = self.get_page_value(base_page_rid_tree[primary_key])
-
-                for i in range(len(projected_columns_index)):
-                    if (projected_columns_index[i] == 1):
-                        if (schema_encoding[i] == '0'):
-                            data_package.append(self.get_page_value(self.get_base_data_address(primary_key, i)))
-                        else:
-                            data_package.append(self.get_page_value(self.get_tail_data_address(rid, i)))
-
-                select_result.append(Record(rid, primary_key, deepcopy(data_package)))
-        return select_result
+            base_record_num = pk_base_tree[search_key][0]
+            base_columns = self.get_record_list(base_record_num, 0, self.table.num_columns, True)
+            base_rid = self.get_value(base_record_num, self.table.rid_index, True)
+            base_se = self.get_value(base_record_num, self.table.schema_encoding_index, True)
+            base_indirection = self.get_value(base_record_num, self.table.indirection_index, True)
+            
+            if (base_se != '0' * self.table.num_columns):
+                tail_record_num = rid_tail_tree[base_indirection][0]
+                for i in range(self.table.num_columns):
+                    if base_se[i] == '1':
+                        base_columns[i] = self.get_value(tail_record_num, i, False)
+            
+            result_columns = []
+                
+            for i in range(len(projected_columns_index)):
+                if projected_columns_index[i] == 1:
+                    result_columns.append(base_columns[i])
+                
+            return [Record(base_rid, search_key, result_columns)]
+            
+        else:
+            pass
+        
 
     def select_version(self, search_key, search_key_index, projected_columns_index, relative_version):
         """
@@ -233,77 +210,84 @@ class Query:
         # Returns True if update is succesful
         # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
         """
-        key_index = self.table.key
-        key = columns[key_index]  # Get key value in position index 0
-        indirection_index = self.table.indirection_index
-        rid_index = self.table.rid_index
-        se_index = self.table.schema_encoding_index
-
-        if not self.table.index.base_page_indices[key_index].has_key(primary_key):
+        primary_key_base_tree = self.table.index.base_page_indices[self.table.key]
+        primary_key_tail_tree = self.table.index.tail_page_indices[self.table.key]
+        
+        if (not primary_key_base_tree.has_key(primary_key)):
             return False
-
-        deletion_detect = '2' * (self.table.num_columns)
-
-        if self.get_page_value(self.get_base_data_address(primary_key, se_index)) == deletion_detect:
-            return False
-
-        base_indirection = self.get_page_value(self.get_base_data_address(primary_key, indirection_index))
-
-        for i in range(self.table.num_columns):
-            if columns[i] != None:
-                delete_detect = False
-
+        
+        base_num_record = primary_key_base_tree[primary_key][0]
+        base_se = self.get_value(base_num_record, self.table.schema_encoding_index, True)
+        is_first_update = True
+        
+        if base_se == '0' * (self.table.num_columns):
+            is_first_update = True
+        else:
+            is_first_update = False
+            
+        if (is_first_update):
+            # Write the snapshot of unmodified record to the tail page
+            rid = self.table.current_rid
+            self.table.current_rid += 1
+            indirection = self.get_value(base_num_record, self.table.rid_index, True)
+            time_stamp = int(time())
+            schema_encoding = '0' * (self.table.num_columns)
+            old_columns = []
+            
+            for i in range (self.table.num_columns):
+                old_columns.append(self.get_value(base_num_record, i, True))
+                
+            data = list(old_columns) + [indirection, rid, time_stamp, schema_encoding]
+            self.table.write_tail_record(Record(rid, primary_key, data))
+            
+            # Update the base record's indirection
+            self.modify_value(base_num_record, self.table.indirection_index, rid, True)
+        
+        base_indirection = self.get_value(base_num_record, self.table.indirection_index, True)
+        tail_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
+        latest_tail_record_num = tail_rid_tree[base_indirection][0]
+        latest_schema_encoding = self.get_value(latest_tail_record_num, self.table.schema_encoding_index, False)
+        latest_columns = []
+        
+        for i in range (self.table.num_columns):
+            latest_columns.append(self.get_value(latest_tail_record_num, i, False))
+            
+        this_columns = list(columns)
+        non_cumulative_schema_encoding = list('0' * (self.table.num_columns))
+        new_columns = [None] * (self.table.num_columns)
+        
+        for i in range (self.table.num_columns):
+            if (this_columns[i] != None and this_columns[i] != latest_columns[i]):
+                non_cumulative_schema_encoding[i] = '1'
+                new_columns[i] = this_columns[i]
+                
+        cumulative_schema_encoding = list('0' * (self.table.num_columns))
+        
+        for i in range (self.table.num_columns):
+            if (non_cumulative_schema_encoding[i] == '1'):
+                cumulative_schema_encoding[i] = '1'
+                continue
+            if (latest_schema_encoding[i] == '1'):
+                cumulative_schema_encoding[i] = '1'
+                new_columns[i] = latest_columns[i]
+                
+        cumulative_schema_encoding = ''.join(cumulative_schema_encoding)
+        
         rid = self.table.current_rid
         self.table.current_rid += 1
-        schema_encoding_init = ['0'] * (self.table.num_columns)  # Assume this is our first update
-
-        first_update = False
-
-        # If we never updated the record before
-        if base_indirection == 0:  # Let base record and tail record's indirections point to each other
-            self.modify_page_value(self.get_base_data_address(primary_key, indirection_index), rid)
-            # Use rid tree to find the base record's rid and assign this rid to the indirection column of new record
-            tail_indirection = self.get_page_value(self.get_base_data_address(primary_key, rid_index))
-            first_update = True
-        # If we updated the record before
-        else:  # Let tail record's indirection points to the orginal base record's indirection,
-            # then update base record's indirection to tail record's rid
-            tail_indirection = base_indirection
-            self.modify_page_value(self.get_base_data_address(primary_key, indirection_index), rid)
-
-        data_init = [None] * (self.table.num_columns)
-
-        for i in range(self.table.num_columns):
-            if columns[i] != None:
-                data_init[i] = columns[i]
-                schema_encoding_init[i] = '1'
-
-        for i in range(self.table.num_columns):
-            if data_init[i] == None:
-                if (first_update):
-                    if self.table.index.base_page_indices[i].has_key(primary_key):
-                        data_init[i] = self.get_page_value(self.get_base_data_address(primary_key, i))
-
-                else:
-                    if self.table.index.tail_page_indices[i].has_key(tail_indirection):
-                        data_init[i] = self.get_page_value(self.get_tail_data_address(tail_indirection, i))
-                        if self.table.index.base_page_indices[i].has_key(primary_key):
-                            if self.get_page_value(
-                                    self.get_tail_data_address(tail_indirection, i)) != self.get_page_value(
-                                self.get_base_data_address(primary_key, i)):
-                                schema_encoding_init[i] = '1'
-
-        schema_encoding = ''.join(schema_encoding_init)
-
-        self.modify_page_value(self.get_base_data_address(primary_key, se_index), schema_encoding)
-
+        indirection = self.get_value(latest_tail_record_num, self.table.rid_index, False)
         time_stamp = int(time())
-
-        data = data_init + [tail_indirection, rid, time_stamp, schema_encoding]
-        record = Record(rid, key, data)
+        schema_encoding = cumulative_schema_encoding
+        data = new_columns + [indirection, rid, time_stamp, schema_encoding]
+        record = Record(rid, primary_key, data)
         self.table.write_tail_record(record)
+        
+        # Update the base record's indirection
+        self.modify_value(base_num_record, self.table.indirection_index, rid, True)
+        self.modify_value(base_num_record, self.table.schema_encoding_index, cumulative_schema_encoding, True)
+        
         return True
-
+        
     def sum(self, start_range, end_range, aggregate_column_index):
         """
          :param start_range: int         # Start of the key range to aggregate

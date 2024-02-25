@@ -3,16 +3,12 @@ import struct
 
 class Page:
 
-    def __init__(self, column_index, page_range_index, page_index, table_key_index, schema_encoding_index, num_col, is_base_page):
+    def __init__(self, schema_encoding_index, num_col, column_index):
         self.num_records = 0
         self.data = bytearray(MAX_PAGE_SIZE)
-        self.column_index = column_index
-        self.page_range_index = page_range_index
-        self.page_index = page_index
-        self.is_base_page = is_base_page
-        self.table_key_index = table_key_index
         self.schema_encoding_index = schema_encoding_index
         self.num_col = num_col
+        self.column_index = column_index
 
     '''
     # Check if the page has capacity for more records
@@ -28,24 +24,23 @@ class Page:
     # return None if the column is None
     '''
     def write(self, value) -> list:
-        # If we do not have any value for this column of the record, we will return None
         # This always happens when we write column for the tail page
         if value == None:
-            return None
+            value = NONE_VALUE
         if self.has_capacity:
             begin = self.num_records * 4
             self.data[begin : begin + 4] = struct.pack("i", int(value))   
             self.num_records += 1
-            return [self.is_base_page, self.column_index, self.page_range_index, self.page_index, self.num_records - 1]
         else: 
             raise MemoryError("This Page is full")
-        
+    '''   
     def get_primary_key_address(self, key_value, dest_list):
         for i in range(self.num_records):
             value = self.get_value(i)
             if value == key_value:
                 address = [self.is_base_page, self.table_key_index, self.page_range_index, self.page_index, i]
                 dest_list.append(address)
+    ''' 
     
     '''
     # Modify the value at the given index
@@ -67,6 +62,8 @@ class Page:
         if (self.column_index == self.schema_encoding_index):
             value = str(value)
             value = value.rjust(self.num_col - 4, '0')
+        if (value == NONE_VALUE):
+            value = None
         return value
     
 class PageRange:
@@ -107,7 +104,8 @@ class PageRange:
     '''
     def get_page(self, index) -> Page:
         return self.pages[index]
-    
+    '''
     def get_primary_key_address(self, key_value, dest_list):
         for page in self.pages:
             page.get_primary_key_address(key_value, dest_list)
+    '''

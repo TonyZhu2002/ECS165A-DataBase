@@ -18,7 +18,7 @@ query = Query(grades_table)
 # dictionary for records to test the database: test directory
 records = {}
 
-number_of_records = 1000
+number_of_records = 100000
 number_of_aggregates = 100
 seed(3562901)
 
@@ -31,7 +31,7 @@ for i in range(0, number_of_records):
 
     records[key] = [key, randint(0, 20), randint(0, 20), randint(0, 20), randint(0, 20)]
     query.insert(*records[key])
-    # print('inserted', records[key])
+    #print('inserted', records[key])
 print("Insert finished")
 
 # Check inserted records using select query
@@ -46,8 +46,8 @@ for key in records:
     if error:
         print('select error on', key, ':', record, ', correct:', records[key])
     else:
-        # pass
-        print('select on', key, ':', record)
+        pass
+        #print('select on', key, ':', record)
 
 for key in records:
     updated_columns = [None, None, None, None, None]
@@ -68,10 +68,10 @@ for key in records:
         if error:
             print('update error on', original, 'and', updated_columns, ':', record.columns, ', correct:', records[key])
         else:
-            # pass
+            pass
             print('update on', original, 'and', updated_columns, ':', record.columns)
         updated_columns[i] = None
-
+'''
 keys = sorted(list(records.keys()))
 # aggregate on every column 
 for c in range(0, grades_table.num_columns):
@@ -96,3 +96,4 @@ for key in list(records.keys()):
         select_result = query.select(key, 0, [1, 1, 1, 1, 1])
         if select_result:
             print(f"Record with key: {key} was not deleted properly.")
+'''

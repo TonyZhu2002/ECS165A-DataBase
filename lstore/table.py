@@ -26,6 +26,8 @@ class Table:
         self.rid_index = self.num_all_columns - 3
         self.time_stamp_index = self.num_all_columns - 2
         self.schema_encoding_index = self.num_all_columns - 1
+        self.base_record_count = 0
+        self.tail_record_count = 0
         
         # Initialize the page range dictionary
         # The key is the column index
@@ -70,9 +72,18 @@ class Table:
             if (not curr_page.has_capacity()):
                 self.__create_page(i, True)
                 curr_page = self.base_page_range_dict[i][-1].get_latest_page()
-            address = curr_page.write(columns[i])
-            if (address != None):
-                self.index.base_page_indices[i][record.key] = address
+            curr_page.write(columns[i])
+            
+            # If the column is not indexed, create an index for the column
+            base_tree = self.index.base_page_indices[i]
+            tail_tree = self.index.tail_page_indices[i]
+            if not base_tree.has_key(columns[i]):
+                base_tree[columns[i]] = []
+                tail_tree[columns[i]] = []
+            
+            # Add the record num to the index
+            base_tree[columns[i]].append(self.base_record_count)
+        self.base_record_count += 1
     
     '''
     # Write a column to the tail page (Further Test Needed)
@@ -88,9 +99,19 @@ class Table:
             if (not curr_page.has_capacity()):
                 self.__create_page(i, False)
                 curr_page = self.tail_page_range_dict[i][-1].get_latest_page()
-            address = curr_page.write(columns[i])
-            if (address != None):
-                self.index.tail_page_indices[i][record.columns[self.rid_index]] = address
+            curr_page.write(columns[i])
+                        
+            # If the column is not indexed, create an index for the column
+            tail_tree = self.index.tail_page_indices[i]
+            
+            # Add the record num to the index
+            if (columns[i] == None):
+                continue
+            if not tail_tree.has_key(columns[i]):
+                tail_tree[columns[i]] = []
+            tail_tree[columns[i]].append(self.tail_record_count)
+                
+        self.tail_record_count += 1
         
     '''
     # Create new pages
@@ -111,9 +132,7 @@ class Table:
         self.page_count_dict[column_index][i] += 1
         if (not page_range_dict[column_index][-1].has_capacity()):
             page_range_dict[column_index].append(PageRange(MAX_PAGE_RANGE))
-        page_range_index = (self.page_count_dict[column_index][i] - 1) // MAX_PAGE_RANGE
-        page_index = (self.page_count_dict[column_index][i] - 1) % MAX_PAGE_RANGE
-        page_range_dict[column_index][-1].add_page(Page(column_index, page_range_index, page_index, self.key, self.schema_encoding_index, self.num_all_columns, is_base_page))
+        page_range_dict[column_index][-1].add_page(Page(self.schema_encoding_index, self.num_all_columns, column_index))
                                
     def __merge(self):
         print("merge is happening")
