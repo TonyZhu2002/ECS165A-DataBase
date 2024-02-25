@@ -215,7 +215,7 @@ class Query:
         
         if (not primary_key_base_tree.has_key(primary_key)):
             return False
-        
+
         base_num_record = primary_key_base_tree[primary_key][0]
         base_se = self.get_value(base_num_record, self.table.schema_encoding_index, True)
         is_first_update = True
@@ -224,6 +224,22 @@ class Query:
             is_first_update = True
         else:
             is_first_update = False
+        
+        # primary key duplication check
+        if columns[self.table.key] != None:
+            if is_first_update:
+                # Check whether the updated primary key matches any existed primary key in primary_key_base_tree
+                if primary_key_base_tree.has_key(columns[self.table.key]):
+                    # Further check whether this is an invalid update
+                    if columns[self.table.key] != primary_key:
+                        return False
+            else:
+                # Check whether the updated primary key matches any existed primary key in primary_key_base_tree
+                if primary_key_base_tree.has_key(columns[self.table.key]):
+                    # Further check whether this is an invalid update
+                    if columns[self.table.key] != primary_key:
+                        return False
+                # Check whether the updated primary key matches any existed primary key in primary_key_tail_tree
             
         if (is_first_update):
             # Write the snapshot of unmodified record to the tail page
@@ -299,7 +315,6 @@ class Query:
          # This function doesn't consider the situation that if the first record is none
          """
         result = 0
-        terminate_key = 0
         indirection_index = self.table.indirection_index
         record_existence = False
         for i in range(start_range, end_range + 1):
