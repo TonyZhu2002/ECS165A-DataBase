@@ -372,14 +372,14 @@ class Query:
         tail_rid_tree = self.table.index.tail_indices[self.table.rid_index]
 
         for i in range(start_range, end_range + 1):
-            if self.table.index.base_page_indices[aggregate_column_index].has_key(i):
+            if self.table.index.base_page_indices[self.table.key].has_key(i):
                 base_num_record = primary_key_base_tree[i][0]
                 base_indirection = self.get_value(base_num_record, indirection_index, True)
                 if base_indirection == 0:
                     result += self.get_value(base_num_record, aggregate_column_index, True)
                     record_existence = True
                     continue
-                if self.table.index.tail_page_indices[aggregate_column_index].has_key(base_indirection):
+                if self.table.index.tail_page_indices[self.table.rid_index].has_key(base_indirection):
                     tail_record_num = tail_rid_tree[base_indirection][0]
                     result += self.get_value(tail_record_num, aggregate_column_index, False)
                     record_existence = True
@@ -398,7 +398,36 @@ class Query:
            # Returns the summation of the given range upon success
            # Returns False if no record exists in the given range
            """
-        pass
+        result = 0
+        record_existence = False
+
+        primary_key_base_tree = self.table.index.base_page_indices[self.table.key]
+        tail_rid_tree = self.table.index.tail_indices[self.table.rid_index]
+
+        for primary_key in range(start_range, end_range + 1):
+            if self.table.index.base_page_indices[self.table.key].has_key(primary_key):
+                version_count = self.get_num_version(primary_key)
+                base_num_record = primary_key_base_tree[primary_key][0]
+
+                if relative_version < (-version_count + 1):
+                    result += self.get_value(base_num_record, aggregate_column_index, True)
+                    record_existence = True
+                    continue
+
+                this_indirection = self.get_value(primary_key_base_tree[primary_key][0], self.table.indirection_index, True)
+                tail_record_num = tail_rid_tree[this_indirection][0]
+
+                for i in range(0, relative_version, -1):
+                    this_indirection = self.get_value(tail_record_num, self.table.indirection_index, False)
+                    tail_record_num = tail_rid_tree[this_indirection][0]
+                
+                result += self.get_value(tail_record_num, aggregate_column_index, False)
+                record_existence = True
+        
+        if record_existence:
+            return result
+        else:
+            return False
 
     def increment(self, key, column):
         """
