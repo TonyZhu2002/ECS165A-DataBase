@@ -264,6 +264,7 @@ class Query:
         """
         primary_key_base_tree = self.table.index.base_page_indices[self.table.key]
         primary_key_tail_tree = self.table.index.tail_page_indices[self.table.key]
+        tail_rid_tree = self.table.index.tail_indices[self.table.rid_index]
         
         if (not primary_key_base_tree.has_key(primary_key)):
             return False
@@ -282,7 +283,7 @@ class Query:
             for base_primary_key in  primary_key_base_tree:
                 base_indirection_loop = self.get_value(primary_key_base_tree[base_primary_key][0], self.table.indirection_index, True)
                 if base_indirection_loop != 0:
-                    tail_latest_primary_key = self.get_value(primary_key_tail_tree[base_indirection_loop][0], self.table.key, False)
+                    tail_latest_primary_key = self.get_value(tail_rid_tree[base_indirection_loop][0], self.table.key, False)
                     if tail_latest_primary_key == columns[self.table.key] and base_primary_key != primary_key:
                         return False
                 else:
@@ -366,15 +367,21 @@ class Query:
         result = 0
         indirection_index = self.table.indirection_index
         record_existence = False
+
+        primary_key_base_tree = self.table.index.base_page_indices[self.table.key]
+        tail_rid_tree = self.table.index.tail_indices[self.table.rid_index]
+
         for i in range(start_range, end_range + 1):
             if self.table.index.base_page_indices[aggregate_column_index].has_key(i):
-                base_indirection = self.get_page_value(self.get_base_data_address(i, indirection_index))
+                base_num_record = primary_key_base_tree[i][0]
+                base_indirection = self.get_value(base_num_record, indirection_index, True)
                 if base_indirection == 0:
-                    result += self.get_page_value(self.get_base_data_address(i, aggregate_column_index))
+                    result += self.get_value(base_num_record, aggregate_column_index, True)
                     record_existence = True
                     continue
                 if self.table.index.tail_page_indices[aggregate_column_index].has_key(base_indirection):
-                    result += self.get_page_value(self.get_tail_data_address(base_indirection, aggregate_column_index))
+                    tail_record_num = tail_rid_tree[base_indirection][0]
+                    result += self.get_value(tail_record_num, aggregate_column_index, False)
                     record_existence = True
         if record_existence:
             return result
