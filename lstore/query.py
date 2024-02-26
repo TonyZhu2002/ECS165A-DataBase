@@ -118,7 +118,7 @@ class Query:
         schema_encoding = '2' * (self.table.num_columns)
         if self.table.index.base_page_indices[key_index].has_key(primary_key):
             base_num_record = primary_key_base_tree[primary_key][0]
-            self.modify_page_value(base_num_record, self.table.schema_encoding_index, schema_encoding)
+            self.modify_value(base_num_record, self.table.schema_encoding_index, schema_encoding)
             self.update(primary_key, *null_columns)
             return True
         else:
