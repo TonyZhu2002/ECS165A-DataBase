@@ -69,7 +69,7 @@ for key in records:
             print('update error on', original, 'and', updated_columns, ':', record.columns, ', correct:', records[key])
         else:
             pass
-            print('update on', original, 'and', updated_columns, ':', record.columns)
+            #print('update on', original, 'and', updated_columns, ':', record.columns)
         updated_columns[i] = None
 '''
 keys = sorted(list(records.keys()))

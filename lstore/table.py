@@ -58,10 +58,12 @@ class Table:
         for i in range(self.num_all_columns):
             if (i != self.key):
                 self.index.create_index(i)
+        
                 
     '''
     # Write a column to the base page
     # :param record: Record     #The record to be written to the base page
+    # key: data 2rd column: 88 value: 
     '''
     def write_base_record(self, record: Record):
         columns = record.columns

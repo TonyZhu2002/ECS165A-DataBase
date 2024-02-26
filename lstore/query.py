@@ -158,7 +158,9 @@ class Query:
         # Returns False if record locked by TPL
         # Assume that select will never be called on a key that doesn't exist
         """
-
+        
+        return self.select_version(search_key, search_key_index, projected_columns_index, 0)
+        '''
         if (search_key_index == self.table.key):
             pk_base_tree = self.table.index.base_page_indices[search_key_index]
             pk_tail_tree = self.table.index.tail_page_indices[search_key_index]
@@ -186,7 +188,7 @@ class Query:
             
         else:
             pass
-        
+        '''
 
     def select_version(self, search_key, search_key_index, projected_columns_index, relative_version):
         """
@@ -199,15 +201,59 @@ class Query:
         # Returns False if record locked by TPL
         # Assume that select will never be called on a key that doesn't exist
         """
-        num_version = self.get_num_version() # num_version = 6, relative_version =  0, -1, ... ,-5
-        if relative_version == 0:
-            return self.select(search_key, search_key_index, projected_columns_index)
-        elif 0 < relative_version <= (-num_version+1):
-            ...
-        else:
-            relative_version_max = -num_version+1
-            return self.select_version(search_key, search_key_index, projected_columns_index, relative_version_max)
-        pass
+
+        base_target_tree = self.table.index.base_page_indices[search_key_index]
+        base_target_list = base_target_tree[search_key]
+        result = []
+        
+        for candidate in base_target_list:
+            se = self.get_value(candidate, self.table.schema_encoding_index, True)
+            if (se == '0' * self.table.num_columns):
+                primary_key = self.get_value(candidate, self.table.key, True)
+                rid = self.get_value(candidate, self.table.rid_index, True)
+                data = []
+                
+                for i in range(self.table.num_columns):
+                    if projected_columns_index[i] == 1:
+                        data.append(self.get_value(candidate, i, True))
+                result.append(Record(rid, primary_key, data))
+        
+        # Traverse the base se tree
+        base_se_tree = self.table.index.base_indices[self.table.schema_encoding_index]
+        tail_rid_tree = self.table.index.tail_indices[self.table.rid_index]
+        
+        for key, value in base_se_tree():
+            if (key[search_key_index] == '1'):
+                
+                for record_num in value:
+                    primary_key = self.get_value(record_num, self.table.key, True)
+                    version_count = self.get_num_version(primary_key)
+                    
+                    if (relative_version > -version_count + 1):
+                        relative_version = -version_count + 1
+                        
+                    this_indirection = self.get_value(record_num, self.table.indirection_index, True)
+                    tail_record_num = tail_rid_tree[this_indirection][0]
+                    value = self.get_value(tail_record_num, search_key_index, False)
+                    
+                    if (value == search_key):
+                        
+                        for i in range(0, relative_version, -1):
+                            this_indirection = self.get_value(tail_record_num, self.table.indirection_index, False)
+                            tail_record_num = tail_rid_tree[this_indirection][0]
+                            
+                        data = []
+                        tail_se = self.get_value(tail_record_num, self.table.schema_encoding_index, False)
+                        
+                        for i in range(len(tail_se)):
+                            if (tail_se[i] == '1' and projected_columns_index[i] == 1):
+                                data.append(self.get_value(tail_record_num, i, False))
+                            elif (tail_se[i] == '0' and projected_columns_index[i] == 1):
+                                data.append(self.get_value(record_num, i, True))
+                        result.append(Record(tail_record_num, search_key, data))
+        return result
+                        
+                        
 
 
     def update(self, primary_key, *columns) -> bool:
@@ -364,6 +410,6 @@ class Query:
             return u
         return False
 
-    def get_num_version(self, search_key, search_key_index, projected_columns_index):
+    def get_num_version(self, primary_key):
 
         pass
