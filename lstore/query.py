@@ -229,7 +229,7 @@ class Query:
                     primary_key = self.get_value(record_num, self.table.key, True)
                     version_count = self.get_num_version(primary_key)
                     
-                    if (relative_version > -version_count + 1):
+                    if (relative_version < -version_count + 1):
                         relative_version = -version_count + 1
                         
                     this_indirection = self.get_value(record_num, self.table.indirection_index, True)
