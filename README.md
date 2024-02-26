@@ -24,7 +24,13 @@
     - [x] Allocate
     - [ ] locate
     - [ ] locate_range
+* ### Milestone2:
     - [ ] Merge
+    - [ ] Select_version
+    - [ ] Sum_version
+    - [ ] Open (In DB)
+    - [ ] Close (In DB)
+    - [ ] BufferPool
 
 ## Our design:
 ### Pages:

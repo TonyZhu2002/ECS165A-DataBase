@@ -199,8 +199,14 @@ class Query:
         # Returns False if record locked by TPL
         # Assume that select will never be called on a key that doesn't exist
         """
+        num_version = self.get_num_version() # num_version = 6, relative_version =  0, -1, ... ,-5
         if relative_version == 0:
             return self.select(search_key, search_key_index, projected_columns_index)
+        elif 0 < relative_version <= (-num_version+1):
+            ...
+        else:
+            relative_version_max = -num_version+1
+            return self.select_version(search_key, search_key_index, projected_columns_index, relative_version_max)
         pass
 
 
@@ -357,3 +363,7 @@ class Query:
             u = self.update(key, *updated_columns)
             return u
         return False
+
+    def get_num_version(self, search_key, search_key_index, projected_columns_index):
+
+        pass
