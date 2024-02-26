@@ -374,6 +374,11 @@ class Query:
         for i in range(start_range, end_range + 1):
             if self.table.index.base_page_indices[self.table.key].has_key(i):
                 base_num_record = primary_key_base_tree[i][0]
+
+                base_se = self.get_value(base_num_record, self.table.schema_encoding_index, True)
+                if base_se[0] == '2':
+                    continue
+
                 base_indirection = self.get_value(base_num_record, indirection_index, True)
                 if base_indirection == 0:
                     result += self.get_value(base_num_record, aggregate_column_index, True)
@@ -406,15 +411,20 @@ class Query:
 
         for primary_key in range(start_range, end_range + 1):
             if self.table.index.base_page_indices[self.table.key].has_key(primary_key):
-                version_count = self.get_num_version(primary_key)
                 base_num_record = primary_key_base_tree[primary_key][0]
+
+                base_se = self.get_value(base_num_record, self.table.schema_encoding_index, True)
+                if base_se[0] == '2':
+                    continue
+
+                version_count = self.get_num_version(primary_key)
 
                 if relative_version < (-version_count + 1):
                     result += self.get_value(base_num_record, aggregate_column_index, True)
                     record_existence = True
                     continue
 
-                this_indirection = self.get_value(primary_key_base_tree[primary_key][0], self.table.indirection_index, True)
+                this_indirection = self.get_value(base_num_record, self.table.indirection_index, True)
                 tail_record_num = tail_rid_tree[this_indirection][0]
 
                 for i in range(0, relative_version, -1):
@@ -447,5 +457,30 @@ class Query:
         return False
 
     def get_num_version(self, primary_key):
+        # Assume the input primary key always exists
+        primary_key_base_tree = self.table.index.base_page_indices[self.table.key]
+        tail_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
+        
+        base_num_record = primary_key_base_tree[primary_key][0]
+        base_indirection = self.get_value(base_num_record, self.table.indirection_index, True)
+
+        if base_indirection == 0:
+            return 1
+        else:
+            version_count = 2
+            base_rid = self.get_value(base_num_record, self.table.rid_index, True)
+
+            this_indirection = self.get_value(base_num_record, self.table.indirection_index, True)
+            tail_record_num = tail_rid_tree[this_indirection][0]
+            next_indirection = self.get_value(tail_record_num, self.table.indirection_index, False)
+
+            while next_indirection != base_rid:
+                version_count += 1
+                
+                this_indirection = next_indirection
+                tail_record_num = tail_rid_tree[next_indirection][0]
+                next_indirection = self.get_value(tail_record_num, self.table.indirection_index, False)
+
+            return version_count    
 
         pass
