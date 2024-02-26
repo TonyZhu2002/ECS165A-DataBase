@@ -227,19 +227,16 @@ class Query:
         
         # primary key duplication check
         if columns[self.table.key] != None:
-            if is_first_update:
-                # Check whether the updated primary key matches any existed primary key in primary_key_base_tree
-                if primary_key_base_tree.has_key(columns[self.table.key]):
-                    # Further check whether this is an invalid update
-                    if columns[self.table.key] != primary_key:
+            for base_primary_key in  primary_key_base_tree:
+                base_indirection_loop = self.get_value(primary_key_base_tree[base_primary_key][0], self.table.indirection_index, True)
+                if base_indirection_loop != 0:
+                    tail_latest_primary_key = self.get_value(primary_key_tail_tree[base_indirection_loop][0], self.table.key, False)
+                    if tail_latest_primary_key == columns[self.table.key] and base_primary_key != primary_key:
                         return False
-            else:
-                # Check whether the updated primary key matches any existed primary key in primary_key_base_tree
-                if primary_key_base_tree.has_key(columns[self.table.key]):
-                    # Further check whether this is an invalid update
-                    if columns[self.table.key] != primary_key:
+                else:
+                    if columns[self.table.key] == base_primary_key and base_primary_key != primary_key:
                         return False
-                # Check whether the updated primary key matches any existed primary key in primary_key_tail_tree
+                    
             
         if (is_first_update):
             # Write the snapshot of unmodified record to the tail page
