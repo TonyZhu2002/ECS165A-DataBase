@@ -111,12 +111,14 @@ class Query:
         # Returns True upon successful deletion
         # Return False if record doesn't exist or is locked due to 2PL
         """
+        primary_key_base_tree = self.table.index.base_page_indices[self.table.key]
+
         null_columns = [None] * (self.table.num_columns)
         key_index = self.table.key
         schema_encoding = '2' * (self.table.num_columns)
         if self.table.index.base_page_indices[key_index].has_key(primary_key):
-            self.modify_page_value(self.get_base_data_address(primary_key, self.table.schema_encoding_index),
-                                   schema_encoding)
+            base_num_record = primary_key_base_tree[primary_key][0]
+            self.modify_page_value(base_num_record, self.table.schema_encoding_index, schema_encoding)
             self.update(primary_key, *null_columns)
             return True
         else:
