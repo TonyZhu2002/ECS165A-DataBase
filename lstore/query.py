@@ -433,7 +433,7 @@ class Query:
         record_existence = False
 
         primary_key_base_tree = self.table.index.base_page_indices[self.table.key]
-        tail_rid_tree = self.table.index.tail_indices[self.table.rid_index]
+        tail_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
 
         for i in range(start_range, end_range + 1):
             if self.table.index.base_page_indices[self.table.key].has_key(i):
@@ -471,7 +471,7 @@ class Query:
         record_existence = False
 
         primary_key_base_tree = self.table.index.base_page_indices[self.table.key]
-        tail_rid_tree = self.table.index.tail_indices[self.table.rid_index]
+        tail_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
 
         for primary_key in range(start_range, end_range + 1):
             if self.table.index.base_page_indices[self.table.key].has_key(primary_key):
