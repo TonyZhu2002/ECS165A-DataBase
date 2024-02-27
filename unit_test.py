@@ -80,6 +80,23 @@ print("Aggregate finished")
 
 
 # Part 2
+
+
+# create a query class for the grades table
+query = Query(grades_table)
+
+# dictionary for records to test the database: test directory
+records = {}
+
+number_of_records = 1000
+number_of_aggregates = 100
+number_of_updates = 1
+
+seed(3562901)
+for i in range(0, number_of_records):
+    key = 92106429 + i
+    records[key] = [key, randint(0, 20), randint(0, 20), randint(0, 20), randint(0, 20)]
+
 # Simulate updates
 updated_records = {}
 keys = sorted(list(records.keys()))
@@ -99,7 +116,7 @@ for key in keys:
         if column != records[key][i]:
             error = True
     if error:
-        print('select error on', key, ':', record.columns, ', correct:', records[key])
+        print('select error on', key, ':', record, ', correct:', records[key])
 print("Select for version -1 finished")
 
 # Check records that were presisted in part 1
@@ -110,7 +127,7 @@ for key in keys:
         if column != records[key][i]:
             error = True
     if error:
-        print('select error on', key, ':', record.columns, ', correct:', records[key])
+        print('select error on', key, ':', record, ', correct:', records[key])
 print("Select for version -2 finished")
 
 for key in keys:
@@ -120,7 +137,7 @@ for key in keys:
         if column != updated_records[key][i]:
             error = True
     if error:
-        print('select error on', key, ':', record.columns, ', correct:', records[key])
+        print('select error on', key, ':', record, ', correct:', records[key])
 print("Select for version 0 finished")
 
 for i in range(0, number_of_aggregates):
