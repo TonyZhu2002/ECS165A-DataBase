@@ -483,7 +483,7 @@ class Query:
 
                 version_count = self.get_num_version(primary_key)
 
-                if relative_version < (-version_count + 1):
+                if relative_version <= (-version_count + 1):
                     result += self.get_value(base_num_record, aggregate_column_index, True)
                     record_existence = True
                     continue
