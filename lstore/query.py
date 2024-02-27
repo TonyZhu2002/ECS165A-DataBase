@@ -229,97 +229,53 @@ class Query:
         rid_list = []
         result = []
         
-        for candidate in base_target_list:
-            se = self.get_value(candidate, self.table.schema_encoding_index, True)
-            primary_key = self.get_value(candidate, self.table.key, True)
-            rid = self.get_value(candidate, self.table.rid_index, True)
-            version_count = self.get_num_version(primary_key)
-            
-            data = []
+        
+        for se, num_list in base_se_tree.items():
             if (se == '0' * self.table.num_columns):
-                for i in range(self.table.num_columns):
-                    if projected_columns_index[i] == 1:
-                        data.append(self.get_value(candidate, i, True))
-                result.append(Record(rid, primary_key, deepcopy(data)))
-                
-
-            elif (se[search_key_index] == '0'):
-                indirection = self.get_value(candidate, self.table.indirection_index, True)
-                tail_record_num = tail_rid_tree[indirection][0]
-                
-                if (relative_version < -version_count + 1):
-                    relative_version = -version_count + 1
+                for candidate in num_list:
+                    expected_value = self.get_value(candidate, search_key_index, True)
+                    if (expected_value != search_key):
+                        continue
+                    primary_key = self.get_value(candidate, self.table.key, True)
+                    rid = self.get_value(candidate, self.table.rid_index, True)
+                    version_count = self.get_num_version(primary_key)
+                    data = []
                     for i in range(self.table.num_columns):
                         if projected_columns_index[i] == 1:
                             data.append(self.get_value(candidate, i, True))
                     result.append(Record(rid, primary_key, deepcopy(data)))
-                    continue    
-
-                # Find the record with the correct version
-                for i in range(0, relative_version, -1):
-                    indirection = self.get_value(tail_record_num, self.table.indirection_index, False)
-                    tail_record_num = tail_rid_tree[indirection][0]
-                
-                # Write the value to the data list       
-                for i in range(self.table.num_columns):
-                    if projected_columns_index[i] == 1 and se[i] == '1':
-                        data.append(self.get_value(tail_record_num, i, False))
-                    elif projected_columns_index[i] == 1 and se[i] == '0':
-                        data.append(self.get_value(candidate, i, True))
-                result.append(Record(rid, primary_key, deepcopy(data)))
-            
-                
-        
-        for i in range(len(tail_target_list) -2 , -1, -1):
-            tail_candidate = tail_target_list[i]
-            base_candidate = None
-            pk = None
-            this_rid = self.get_value(tail_candidate, self.table.rid_index, False)
-            indirection = self.get_value(tail_candidate, self.table.indirection_index, False)
-            
-            # Always get the latest version
-            if this_rid in rid_list:
+            elif (se == '2' * self.table.num_columns):
                 continue
-            rid_list.append(this_rid)
-            
-            for j in range(0, 9999999):
-                
-                if (not tail_rid_tree.has_key(indirection) and base_rid_tree.has_key(indirection)):
-                    base_candidate = base_rid_tree[indirection][0]
-                    pk = self.get_value(base_candidate, self.table.key, True)
-                    break
-                
-                if (len(tail_rid_tree[indirection]) == 0):
-                    break
-                
-                indirection = self.get_value(tail_candidate, self.table.indirection_index, False)
-                tail_candidate = tail_rid_tree[indirection][0]
-                
-            if (pk != None):
-                version_count = self.get_num_version(pk)
             else:
-                continue
-            
-            if (relative_version < -version_count + 1):
-                relative_version = -version_count + 1
-                for i in range(self.table.num_columns):
-                    if projected_columns_index[i] == 1:
-                        data.append(self.get_value(base_candidate, i, True))
-                result.append(Record(rid, primary_key, deepcopy(data)))
-                continue    
-            
-            for i in range(0, version_count, -1):
-                indirection = self.get_value(tail_record_num, self.table.indirection_index, False)
-                tail_record_num = tail_rid_tree[indirection][0]
-                
-            for i in range(self.table.num_columns):
-                if projected_columns_index[i] == 1 and se[i] == '1':
-                    data.append(self.get_value(tail_record_num, i, False))
-                elif projected_columns_index[i] == 1 and se[i] == '0':
-                    data.append(self.get_value(base_candidate, i, True))
-            result.append(Record(rid, primary_key, deepcopy(data)))
-            
+                for candidate in num_list:
+                    primary_key = self.get_value(candidate, self.table.key, True)
+                    old_value = self.get_value(candidate, search_key_index, True)
+                    indirection = self.get_value(candidate, self.table.indirection_index, True)
+                    tail_record_num = tail_rid_tree[indirection][0]
+                    latest_value = self.get_value(tail_record_num, search_key_index, False)
+                    data = []
+                    
+                    if (latest_value == None and old_value == search_key or latest_value == search_key):
+                        version_count = self.get_num_version(primary_key)
+                        relative_version = -relative_version
+                        if (relative_version > version_count - 1):
+                            relative_version = version_count - 1
+                    
+                        for i in range(relative_version):
+                            indirection = self.get_value(tail_record_num, self.table.indirection_index, False)
+                            tail_record_num = tail_rid_tree[indirection][0]
+                            
+                        rid = self.get_value(tail_record_num, self.table.rid_index, False)
+                        
+                        for i in range(self.table.num_columns):
+                            if projected_columns_index[i] == 1 and se[i] == '1':
+                                data.append(self.get_value(tail_record_num, i, False))
+                            elif projected_columns_index[i] == 1 and se[i] == '0':
+                                data.append(self.get_value(candidate, i, True))
+                        result.append(Record(rid, primary_key, deepcopy(data))) 
+                    
         return result
+
 
                         
                         

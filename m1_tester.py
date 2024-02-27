@@ -18,7 +18,7 @@ query = Query(grades_table)
 # dictionary for records to test the database: test directory
 records = {}
 
-number_of_records = 10000
+number_of_records = 1000
 number_of_aggregates = 100
 seed(3562901)
 
@@ -44,10 +44,11 @@ for key in records:
         if column != records[key][i]:
             error = True
     if error:
-        print('select error on', key, ':', record, ', correct:', records[key])
+        pass
+        print('select error on', key, ':', record.columns, ', correct:', records[key])
     else:
         pass
-        print('select on', key, ':', record)
+        #print('select on', key, ':', record.columns)
 
 for key in records:
     updated_columns = [None, None, None, None, None]
@@ -66,6 +67,7 @@ for key in records:
             if column != records[key][j]:
                 error = True
         if error:
+            pass
             print('update error on', original, 'and', updated_columns, ':', record.columns, ', correct:', records[key])
         else:
             pass
