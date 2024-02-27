@@ -59,10 +59,17 @@ class Database():
         """
         # Deletes the specified table
         """
+        if self.tables.get(name) == None:
+            raise ValueError(f'Table {name} already deleted!')
+        else:
+            del self.tables[name]
         pass
 
     def get_table(self, name):
         """
         # Returns table with the passed name
         """
+        for table in self.tables:
+            if table.name == name:
+                return table
         pass
