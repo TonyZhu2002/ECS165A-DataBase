@@ -3,12 +3,13 @@ import struct
 
 class Page:
 
-    def __init__(self, schema_encoding_index, num_col, column_index):
+    def __init__(self, schema_encoding_index, num_col, column_index, page_index):
         self.num_records = 0
         self.data = bytearray(MAX_PAGE_SIZE)
         self.schema_encoding_index = schema_encoding_index
         self.num_col = num_col
         self.column_index = column_index
+        self.page_index = page_index
 
     '''
     # Check if the page has capacity for more records
@@ -69,12 +70,13 @@ class Page:
         return value
     
 class PageRange:
-    def __init__(self, max_capacity):
+    def __init__(self, max_capacity, page_range_index):
         # The maximum number of pages that can be stored in this page range
         self.max_capacity = max_capacity
         
         # For example, [Page1, Page2, Page3, ..., PageMaxCapacity]
         self.pages = []
+        self.page_range_index = page_range_index
     
     '''
     # Check if the page range has capacity for more pages
