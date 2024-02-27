@@ -47,7 +47,7 @@ for key in records:
         print('select error on', key, ':', record, ', correct:', records[key])
     else:
         pass
-        #print('select on', key, ':', record)
+        print('select on', key, ':', record)
 
 for key in records:
     updated_columns = [None, None, None, None, None]

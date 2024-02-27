@@ -253,7 +253,7 @@ class Query:
                 # Find the record with the correct version
                 for i in range(0, relative_version, -1):
                     indirection = self.get_value(tail_record_num, self.table.indirection_index, False)
-                    tail_record_num = tail_rid_tree[this_indirection][0]
+                    tail_record_num = tail_rid_tree[indirection][0]
                 
                 # Write the value to the data list       
                 for i in range(self.table.num_columns):
@@ -284,11 +284,16 @@ class Query:
                     pk = self.get_value(base_candidate, self.table.key, True)
                     break
                 
+                if (len(tail_rid_tree[indirection]) == 0):
+                    break
+                
                 indirection = self.get_value(tail_candidate, self.table.indirection_index, False)
-                print(tail_rid_tree[indirection])
                 tail_candidate = tail_rid_tree[indirection][0]
                 
-            version_count = self.get_num_version(pk)
+            if (pk != None):
+                version_count = self.get_num_version(pk)
+            else:
+                continue
             
             if (relative_version < -version_count + 1):
                 relative_version = -version_count + 1
@@ -298,7 +303,7 @@ class Query:
                 result.append(Record(rid, primary_key, deepcopy(data)))
                 continue    
             
-            for i in range(0, relative_version, -1):
+            for i in range(0, version_count, -1):
                 indirection = self.get_value(tail_record_num, self.table.indirection_index, False)
                 tail_record_num = tail_rid_tree[indirection][0]
                 
@@ -310,42 +315,7 @@ class Query:
             result.append(Record(rid, primary_key, deepcopy(data)))
             
         return result
-                
-        # Traverse the base se tree
 
-        
-        for key, value in base_se_tree.items():
-            if (key != '0' * self.table.num_columns):
-                print(key)
-            if (key != '0' * self.table.num_columns):
-                
-                for record_num in value:
-                    primary_key = self.get_value(record_num, self.table.key, True)
-                    version_count = self.get_num_version(primary_key)
-                    
-                    if (relative_version < -version_count + 1):
-                        relative_version = -version_count + 1
-                        
-                    this_indirection = self.get_value(record_num, self.table.indirection_index, True)
-                    tail_record_num = tail_rid_tree[this_indirection][0]
-                    value = self.get_value(tail_record_num, search_key_index, False)
-                    
-                    if (value == search_key):
-                        
-                        for i in range(0, relative_version, -1):
-                            this_indirection = self.get_value(tail_record_num, self.table.indirection_index, False)
-                            tail_record_num = tail_rid_tree[this_indirection][0]
-                            
-                        data = []
-                        tail_se = self.get_value(tail_record_num, self.table.schema_encoding_index, False)
-                        
-                        for i in range(len(tail_se)):
-                            if (tail_se[i] == '1' and projected_columns_index[i] == 1):
-                                data.append(self.get_value(tail_record_num, i, False))
-                            elif (tail_se[i] == '0' and projected_columns_index[i] == 1):
-                                data.append(self.get_value(record_num, i, True))
-                        result.append(Record(tail_record_num, search_key, data))
-        return result
                         
                         
 

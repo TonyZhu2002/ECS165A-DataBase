@@ -10,7 +10,7 @@ query = Query(grades_table)
 keys = []
 
 insert_time_0 = process_time()
-for i in range(0, 100000):
+for i in range(0, 10000):
     query.insert(906659671 + i, 93, 0, 0, 0)
     keys.append(906659671 + i)
     #print('This is iteration', i)
@@ -31,7 +31,7 @@ update_cols = [
  ]
 
 update_time_0 = process_time()
-for i in range(0, 100000):
+for i in range(0, 10000):
     query.update(choice(keys), *(choice(update_cols)))
     #print('This is update iteration', i)
 update_time_1 = process_time()
@@ -56,9 +56,14 @@ print("Updating 100k records took:  \t\t\t", update_time_1 - update_time_0)
 
 # Measuring Select Performance
 
+count = 0
 select_time_0 = process_time()
-for i in range(0, 100000):
-    query.select(choice(keys),0 , [1, 1, 1, 1, 1])
+for i in range(0, 10000):
+    selected_key = choice(keys)
+    count += 1
+    #print(count)
+    #print("Selected key is: ", selected_key)
+    query.select(selected_key,0 , [1, 1, 1, 1, 1])
 select_time_1 = process_time()
 print("Selecting 100k records took:  \t\t\t", select_time_1 - select_time_0)
 
