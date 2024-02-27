@@ -176,35 +176,7 @@ class Query:
         """
         
         return self.select_version(search_key, search_key_index, projected_columns_index, 0)
-        '''
-        if (search_key_index == self.table.key):
-            pk_base_tree = self.table.index.base_page_indices[search_key_index]
-            pk_tail_tree = self.table.index.tail_page_indices[search_key_index]
-            rid_tail_tree = self.table.index.tail_page_indices[self.table.rid_index]
 
-            base_record_num = pk_base_tree[search_key][0]
-            base_columns = self.get_record_list(base_record_num, 0, self.table.num_columns, True)
-            base_rid = self.get_value(base_record_num, self.table.rid_index, True)
-            base_se = self.get_value(base_record_num, self.table.schema_encoding_index, True)
-            base_indirection = self.get_value(base_record_num, self.table.indirection_index, True)
-            
-            if (base_se != '0' * self.table.num_columns):
-                tail_record_num = rid_tail_tree[base_indirection][0]
-                for i in range(self.table.num_columns):
-                    if base_se[i] == '1':
-                        base_columns[i] = self.get_value(tail_record_num, i, False)
-            
-            result_columns = []
-                
-            for i in range(len(projected_columns_index)):
-                if projected_columns_index[i] == 1:
-                    result_columns.append(base_columns[i])
-            
-            return [Record(base_rid, search_key, result_columns)]
-            
-        else:
-            pass
-        '''
 
     def select_version(self, search_key, search_key_index, projected_columns_index, relative_version):
         """
@@ -258,14 +230,15 @@ class Query:
                     if (latest_value == None and old_value == search_key or latest_value == search_key):
                         version_count = self.get_num_version(primary_key)
                         relative_version = -relative_version
-                        if (relative_version > version_count - 1):
-                            relative_version = version_count - 1
+                        if (relative_version > version_count - 2):
+                            relative_version = version_count - 2
                     
                         for i in range(relative_version):
                             indirection = self.get_value(tail_record_num, self.table.indirection_index, False)
                             tail_record_num = tail_rid_tree[indirection][0]
                             
                         rid = self.get_value(tail_record_num, self.table.rid_index, False)
+                        se = self.get_value(tail_record_num, self.table.schema_encoding_index, False)
                         
                         for i in range(self.table.num_columns):
                             if projected_columns_index[i] == 1 and se[i] == '1':
@@ -411,7 +384,10 @@ class Query:
                     continue
                 if self.table.index.tail_page_indices[self.table.rid_index].has_key(base_indirection):
                     tail_record_num = tail_rid_tree[base_indirection][0]
-                    result += self.get_value(tail_record_num, aggregate_column_index, False)
+                    if self.get_value(tail_record_num, aggregate_column_index, False) is not None:
+                        result += self.get_value(tail_record_num, aggregate_column_index, False)
+                    else:
+                        result += self.get_value(base_num_record, aggregate_column_index, True)
                     record_existence = True
         if record_existence:
             return result
@@ -455,8 +431,10 @@ class Query:
                 for i in range(0, relative_version, -1):
                     this_indirection = self.get_value(tail_record_num, self.table.indirection_index, False)
                     tail_record_num = tail_rid_tree[this_indirection][0]
-                
-                result += self.get_value(tail_record_num, aggregate_column_index, False)
+                if self.get_value(tail_record_num, aggregate_column_index, False) is not None:
+                    result += self.get_value(tail_record_num, aggregate_column_index, False)
+                else:
+                    result += self.get_value(base_num_record, aggregate_column_index, True)
                 record_existence = True
         
         if record_existence:
