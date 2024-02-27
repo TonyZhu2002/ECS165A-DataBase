@@ -26,11 +26,14 @@ class Query:
          # :param column_index: int     #The index of the column
          # :param new_value: int        #The new value
         """
+        indices = None
         
         if (is_base_page):
             page_range_dict = self.table.base_page_range_dict
+            indices = self.table.index.base_page_indices
         else:
             page_range_dict = self.table.tail_page_range_dict
+            indices = self.table.index.tail_page_indices
         
         page_range_list = page_range_dict[column_index]
         page_index = record_num // MAX_RECORD_PER_PAGE
@@ -39,7 +42,13 @@ class Query:
         page_index_in_range = page_index % MAX_PAGE_RANGE
         page = page_range_list[page_range_index].get_page(page_index_in_range)
         
-        page.modify_value(new_value, record_index)
+        old_value = page.modify_value(new_value, record_index)
+        indices[column_index][old_value].remove(record_num)
+        
+        if (new_value not in indices[column_index]):
+            indices[column_index][new_value] = []
+        indices[column_index][new_value].append(record_num)
+        
 
     def get_value(self, record_num: int, column_index: int, is_base_page = True) -> int:
         """
@@ -185,7 +194,7 @@ class Query:
             for i in range(len(projected_columns_index)):
                 if projected_columns_index[i] == 1:
                     result_columns.append(base_columns[i])
-                
+            
             return [Record(base_rid, search_key, result_columns)]
             
         else:
@@ -206,26 +215,109 @@ class Query:
 
         base_target_tree = self.table.index.base_page_indices[search_key_index]
         base_target_list = base_target_tree[search_key]
+        tail_target_tree = self.table.index.tail_page_indices[search_key_index]
+        tail_target_list = tail_target_tree[search_key]
+        base_se_tree = self.table.index.base_page_indices[self.table.schema_encoding_index]
+        base_indirection_tree = self.table.index.base_page_indices[self.table.indirection_index]
+        base_rid_tree = self.table.index.base_page_indices[self.table.rid_index]
+        tail_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
+        rid_list = []
         result = []
         
         for candidate in base_target_list:
             se = self.get_value(candidate, self.table.schema_encoding_index, True)
+            primary_key = self.get_value(candidate, self.table.key, True)
+            rid = self.get_value(candidate, self.table.rid_index, True)
+            version_count = self.get_num_version(primary_key)
+            
+            data = []
             if (se == '0' * self.table.num_columns):
-                primary_key = self.get_value(candidate, self.table.key, True)
-                rid = self.get_value(candidate, self.table.rid_index, True)
-                data = []
-                
                 for i in range(self.table.num_columns):
                     if projected_columns_index[i] == 1:
                         data.append(self.get_value(candidate, i, True))
-                result.append(Record(rid, primary_key, data))
+                result.append(Record(rid, primary_key, deepcopy(data)))
+                
+
+            elif (se[search_key_index] == '0'):
+                indirection = self.get_value(candidate, self.table.indirection_index, True)
+                tail_record_num = tail_rid_tree[indirection][0]
+                
+                if (relative_version < -version_count + 1):
+                    relative_version = -version_count + 1
+                    for i in range(self.table.num_columns):
+                        if projected_columns_index[i] == 1:
+                            data.append(self.get_value(candidate, i, True))
+                    result.append(Record(rid, primary_key, deepcopy(data)))
+                    continue    
+
+                # Find the record with the correct version
+                for i in range(0, relative_version, -1):
+                    indirection = self.get_value(tail_record_num, self.table.indirection_index, False)
+                    tail_record_num = tail_rid_tree[this_indirection][0]
+                
+                # Write the value to the data list       
+                for i in range(self.table.num_columns):
+                    if projected_columns_index[i] == 1 and se[i] == '1':
+                        data.append(self.get_value(tail_record_num, i, False))
+                    elif projected_columns_index[i] == 1 and se[i] == '0':
+                        data.append(self.get_value(candidate, i, True))
+                result.append(Record(rid, primary_key, deepcopy(data)))
+            
+                
         
+        for i in range(len(tail_target_list) -2 , -1, -1):
+            tail_candidate = tail_target_list[i]
+            base_candidate = None
+            pk = None
+            this_rid = self.get_value(tail_candidate, self.table.rid_index, False)
+            indirection = self.get_value(tail_candidate, self.table.indirection_index, False)
+            
+            # Always get the latest version
+            if this_rid in rid_list:
+                continue
+            rid_list.append(this_rid)
+            
+            for j in range(0, 9999999):
+                
+                if (not tail_rid_tree.has_key(indirection) and base_rid_tree.has_key(indirection)):
+                    base_candidate = base_rid_tree[indirection][0]
+                    pk = self.get_value(base_candidate, self.table.key, True)
+                    break
+                
+                indirection = self.get_value(tail_candidate, self.table.indirection_index, False)
+                print(tail_rid_tree[indirection])
+                tail_candidate = tail_rid_tree[indirection][0]
+                
+            version_count = self.get_num_version(pk)
+            
+            if (relative_version < -version_count + 1):
+                relative_version = -version_count + 1
+                for i in range(self.table.num_columns):
+                    if projected_columns_index[i] == 1:
+                        data.append(self.get_value(base_candidate, i, True))
+                result.append(Record(rid, primary_key, deepcopy(data)))
+                continue    
+            
+            for i in range(0, relative_version, -1):
+                indirection = self.get_value(tail_record_num, self.table.indirection_index, False)
+                tail_record_num = tail_rid_tree[indirection][0]
+                
+            for i in range(self.table.num_columns):
+                if projected_columns_index[i] == 1 and se[i] == '1':
+                    data.append(self.get_value(tail_record_num, i, False))
+                elif projected_columns_index[i] == 1 and se[i] == '0':
+                    data.append(self.get_value(base_candidate, i, True))
+            result.append(Record(rid, primary_key, deepcopy(data)))
+            
+        return result
+                
         # Traverse the base se tree
-        base_se_tree = self.table.index.base_indices[self.table.schema_encoding_index]
-        tail_rid_tree = self.table.index.tail_indices[self.table.rid_index]
+
         
-        for key, value in base_se_tree():
-            if (key[search_key_index] == '1'):
+        for key, value in base_se_tree.items():
+            if (key != '0' * self.table.num_columns):
+                print(key)
+            if (key != '0' * self.table.num_columns):
                 
                 for record_num in value:
                     primary_key = self.get_value(record_num, self.table.key, True)
@@ -266,7 +358,7 @@ class Query:
         """
         primary_key_base_tree = self.table.index.base_page_indices[self.table.key]
         primary_key_tail_tree = self.table.index.tail_page_indices[self.table.key]
-        tail_rid_tree = self.table.index.tail_indices[self.table.rid_index]
+        tail_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
         
         if (not primary_key_base_tree.has_key(primary_key)):
             return False
@@ -325,7 +417,7 @@ class Query:
         new_columns = [None] * (self.table.num_columns)
         
         for i in range (self.table.num_columns):
-            if (this_columns[i] != None and this_columns[i] != latest_columns[i]):
+            if (this_columns[i] != None):
                 non_cumulative_schema_encoding[i] = '1'
                 new_columns[i] = this_columns[i]
                 

@@ -49,7 +49,9 @@ class Page:
     '''    
     def modify_value(self, value, index):
         begin = index * 4
+        old_value = self.get_value(index)
         self.data[begin : begin + 4] = struct.pack("i", int(value))
+        return old_value
         
     '''
     # Get the value at the given index
