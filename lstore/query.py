@@ -121,6 +121,7 @@ class Query:
         # Return False if record doesn't exist or is locked due to 2PL
         """
         primary_key_base_tree = self.table.index.base_page_indices[self.table.key]
+        tail_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
 
         null_columns = [None] * (self.table.num_columns)
         key_index = self.table.key
@@ -129,6 +130,10 @@ class Query:
             base_num_record = primary_key_base_tree[primary_key][0]
             self.modify_value(base_num_record, self.table.schema_encoding_index, schema_encoding)
             self.update(primary_key, *null_columns)
+            # Update the latest update record's schema encoding
+            this_indirection = self.get_value(base_num_record, self.table.indirection_index, True)
+            tail_num_record = tail_rid_tree[this_indirection][0]
+            self.modify_value(tail_num_record, self.table.schema_encoding_index, schema_encoding, False)
             return True
         else:
             return False
