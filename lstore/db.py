@@ -69,8 +69,7 @@ class Database():
                                             with open(page_file_path, 'r') as file:
                                                 serialized_page = file.read()
                                             page = serialized_page.deserialize(serialized_page)
-                                            # Assuming you have a method to add the page back to the buffer pool
-                                            table.add_page_to_bufferpool(column_dir, page_type, page_range_dir, page)
+                                            table.bufferpool.add_page(page_type, int(column_dir), page, int(page_range_dir))
 
         # After loading, perform any necessary initializations or buffer pool population
 
