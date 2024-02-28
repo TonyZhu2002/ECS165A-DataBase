@@ -16,7 +16,7 @@ class Query:
         self.table = table
         pass
 
-    def modify_value(self, record_num: int, column_index: int, new_value: int, is_base_page = True):
+    def modify_value(self, record_num: int, column_index: int, new_value: int, is_base_page=True):
         """
          # Internal Method
          # Modify the value at the given record number and column index
@@ -25,30 +25,28 @@ class Query:
          # :param new_value: int        #The new value
         """
 
-
         if (is_base_page):
             page_range_dict = self.table.base_page_range_dict
             indices = self.table.index.base_page_indices
         else:
             page_range_dict = self.table.tail_page_range_dict
             indices = self.table.index.tail_page_indices
-        
+
         page_range_list = page_range_dict[column_index]
         page_index = record_num // MAX_RECORD_PER_PAGE
         record_index = record_num % MAX_RECORD_PER_PAGE
         page_range_index = page_index // MAX_PAGE_RANGE
         page_index_in_range = page_index % MAX_PAGE_RANGE
         page = page_range_list[page_range_index].get_page(page_index_in_range)
-        
+
         old_value = page.modify_value(new_value, record_index)
         indices[column_index][old_value].remove(record_num)
-        
+
         if (new_value not in indices[column_index]):
             indices[column_index][new_value] = []
         indices[column_index][new_value].append(record_num)
-        
 
-    def get_value(self, record_num: int, column_index: int, is_base_page = True) -> int:
+    def get_value(self, record_num: int, column_index: int, is_base_page=True) -> int:
         """
         # Internal Method
         # Get the value at the given record number and column index
@@ -60,17 +58,17 @@ class Query:
             page_range_dict = self.table.base_page_range_dict
         else:
             page_range_dict = self.table.tail_page_range_dict
-        
+
         page_range_list = page_range_dict[column_index]
         page_index = record_num // MAX_RECORD_PER_PAGE
         record_index = record_num % MAX_RECORD_PER_PAGE
         page_range_index = page_index // MAX_PAGE_RANGE
         page_index_in_range = page_index % MAX_PAGE_RANGE
         page = page_range_list[page_range_index].get_page(page_index_in_range)
-        
+
         return page.get_value(record_index)
-    
-    def get_record_list(self, record_num: int, start: int, end: int, is_base_page = True) -> list:
+
+    def get_record_list(self, record_num: int, start: int, end: int, is_base_page=True) -> list:
         result = []
         for i in range(start, end):
             result.append(self.get_value(record_num, i, is_base_page))
@@ -144,7 +142,7 @@ class Query:
          """
         key_index = self.table.key
         key = columns[key_index]
-        
+
         if self.table.index.base_page_indices[key_index].has_key(key):
             record_num = self.table.index.base_page_indices[key_index][key][0]
             if (self.get_value(record_num, self.table.schema_encoding_index) != '2' * (self.table.num_columns)):
@@ -172,9 +170,8 @@ class Query:
         # Returns False if record locked by TPL
         # Assume that select will never be called on a key that doesn't exist
         """
-        
-        return self.select_version(search_key, search_key_index, projected_columns_index, 0)
 
+        return self.select_version(search_key, search_key_index, projected_columns_index, 0)
 
     def select_version(self, search_key, search_key_index, projected_columns_index, relative_version):
         """
@@ -198,8 +195,7 @@ class Query:
         tail_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
         rid_list = []
         result = []
-        
-        
+
         for se, num_list in base_se_tree.items():
             if (se == '0' * self.table.num_columns):
                 for candidate in num_list:
@@ -224,33 +220,28 @@ class Query:
                     tail_record_num = tail_rid_tree[indirection][0]
                     latest_value = self.get_value(tail_record_num, search_key_index, False)
                     data = []
-                    
+
                     if (latest_value == None and old_value == search_key or latest_value == search_key):
                         version_count = self.get_num_version(primary_key)
                         relative_version = -relative_version
                         if (relative_version > version_count - 2):
                             relative_version = version_count - 2
-                    
+
                         for i in range(relative_version):
                             indirection = self.get_value(tail_record_num, self.table.indirection_index, False)
                             tail_record_num = tail_rid_tree[indirection][0]
-                            
+
                         rid = self.get_value(tail_record_num, self.table.rid_index, False)
                         se = self.get_value(tail_record_num, self.table.schema_encoding_index, False)
-                        
+
                         for i in range(self.table.num_columns):
                             if projected_columns_index[i] == 1 and se[i] == '1':
                                 data.append(self.get_value(tail_record_num, i, False))
                             elif projected_columns_index[i] == 1 and se[i] == '0':
                                 data.append(self.get_value(candidate, i, True))
-                        result.append(Record(rid, primary_key, deepcopy(data))) 
-                    
+                        result.append(Record(rid, primary_key, deepcopy(data)))
+
         return result
-
-
-                        
-                        
-
 
     def update(self, primary_key, *columns) -> bool:
         """
@@ -261,32 +252,33 @@ class Query:
         primary_key_base_tree = self.table.index.base_page_indices[self.table.key]
         primary_key_tail_tree = self.table.index.tail_page_indices[self.table.key]
         tail_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
-        
+
         if (not primary_key_base_tree.has_key(primary_key)):
             return False
 
         base_num_record = primary_key_base_tree[primary_key][0]
         base_se = self.get_value(base_num_record, self.table.schema_encoding_index, True)
         is_first_update = True
-        
+
         if base_se == '0' * (self.table.num_columns):
             is_first_update = True
         else:
             is_first_update = False
-        
+
         # primary key duplication check
         if columns[self.table.key] != None:
-            for base_primary_key in  primary_key_base_tree:
-                base_indirection_loop = self.get_value(primary_key_base_tree[base_primary_key][0], self.table.indirection_index, True)
+            for base_primary_key in primary_key_base_tree:
+                base_indirection_loop = self.get_value(primary_key_base_tree[base_primary_key][0],
+                                                       self.table.indirection_index, True)
                 if base_indirection_loop != 0:
-                    tail_latest_primary_key = self.get_value(tail_rid_tree[base_indirection_loop][0], self.table.key, False)
+                    tail_latest_primary_key = self.get_value(tail_rid_tree[base_indirection_loop][0], self.table.key,
+                                                             False)
                     if tail_latest_primary_key == columns[self.table.key] and base_primary_key != primary_key:
                         return False
                 else:
                     if columns[self.table.key] == base_primary_key and base_primary_key != primary_key:
                         return False
-                    
-            
+
         if (is_first_update):
             # Write the snapshot of unmodified record to the tail page
             rid = self.table.current_rid
@@ -295,46 +287,46 @@ class Query:
             time_stamp = int(time())
             schema_encoding = '0' * (self.table.num_columns)
             old_columns = []
-            
-            for i in range (self.table.num_columns):
+
+            for i in range(self.table.num_columns):
                 old_columns.append(self.get_value(base_num_record, i, True))
-                
+
             data = list(old_columns) + [indirection, rid, time_stamp, schema_encoding]
             self.table.write_tail_record(Record(rid, primary_key, data))
-            
+
             # Update the base record's indirection
             self.modify_value(base_num_record, self.table.indirection_index, rid, True)
-        
+
         base_indirection = self.get_value(base_num_record, self.table.indirection_index, True)
         tail_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
         latest_tail_record_num = tail_rid_tree[base_indirection][0]
         latest_schema_encoding = self.get_value(latest_tail_record_num, self.table.schema_encoding_index, False)
         latest_columns = []
-        
-        for i in range (self.table.num_columns):
+
+        for i in range(self.table.num_columns):
             latest_columns.append(self.get_value(latest_tail_record_num, i, False))
-            
+
         this_columns = list(columns)
         non_cumulative_schema_encoding = list('0' * (self.table.num_columns))
         new_columns = [None] * (self.table.num_columns)
-        
-        for i in range (self.table.num_columns):
+
+        for i in range(self.table.num_columns):
             if (this_columns[i] != None):
                 non_cumulative_schema_encoding[i] = '1'
                 new_columns[i] = this_columns[i]
-                
+
         cumulative_schema_encoding = list('0' * (self.table.num_columns))
-        
-        for i in range (self.table.num_columns):
+
+        for i in range(self.table.num_columns):
             if (non_cumulative_schema_encoding[i] == '1'):
                 cumulative_schema_encoding[i] = '1'
                 continue
             if (latest_schema_encoding[i] == '1'):
                 cumulative_schema_encoding[i] = '1'
                 new_columns[i] = latest_columns[i]
-                
+
         cumulative_schema_encoding = ''.join(cumulative_schema_encoding)
-        
+
         rid = self.table.current_rid
         self.table.current_rid += 1
         indirection = self.get_value(latest_tail_record_num, self.table.rid_index, False)
@@ -343,13 +335,13 @@ class Query:
         data = new_columns + [indirection, rid, time_stamp, schema_encoding]
         record = Record(rid, primary_key, data)
         self.table.write_tail_record(record)
-        
+
         # Update the base record's indirection
         self.modify_value(base_num_record, self.table.indirection_index, rid, True)
         self.modify_value(base_num_record, self.table.schema_encoding_index, cumulative_schema_encoding, True)
-        
+
         return True
-        
+
     def sum(self, start_range, end_range, aggregate_column_index):
         """
          :param start_range: int         # Start of the key range to aggregate
@@ -434,7 +426,7 @@ class Query:
                 else:
                     result += self.get_value(base_num_record, aggregate_column_index, True)
                 record_existence = True
-        
+
         if record_existence:
             return result
         else:
@@ -461,7 +453,7 @@ class Query:
         # Assume the input primary key always exists
         primary_key_base_tree = self.table.index.base_page_indices[self.table.key]
         tail_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
-        
+
         base_num_record = primary_key_base_tree[primary_key][0]
         base_indirection = self.get_value(base_num_record, self.table.indirection_index, True)
 
@@ -477,11 +469,11 @@ class Query:
 
             while next_indirection != base_rid:
                 version_count += 1
-                
+
                 this_indirection = next_indirection
                 tail_record_num = tail_rid_tree[next_indirection][0]
                 next_indirection = self.get_value(tail_record_num, self.table.indirection_index, False)
 
-            return version_count    
+            return version_count
 
         pass

@@ -29,9 +29,9 @@ class Table:
         self.rid_index = self.num_all_columns - 3
         self.time_stamp_index = self.num_all_columns - 2
         self.schema_encoding_index = self.num_all_columns - 1
-        self.base_record_count = 0
-        self.tail_record_count = 0
-        self.page_range_count = 0
+        self.base_record_index = 0
+        self.tail_record_index = 0
+        self.page_range_index = 0
         self.page_count = 0
 
         # Initialize the page range dictionary
@@ -135,17 +135,17 @@ class Table:
             page_range_dict = self.tail_page_range_dict
             i = 1
         if (page_range_dict.get(column_index) == None):
-            page_range_dict[column_index] = [PageRange(MAX_PAGE_RANGE, self.page_range_count)]
-            self.page_range_count += 1
-        if (self.page_count_dict.get(column_index) == None):
-            self.page_count_dict[column_index] = [0, 0]
-        self.page_count_dict[column_index][i] += 1
+            page_range_dict[column_index] = [PageRange(MAX_PAGE_RANGE, self.page_range_index)]
+            self.page_range_index += 1
+        if (self.page_index_dict.get(column_index) == None):
+            self.page_index_dict[column_index] = [0, 0]
+        self.page_index_dict[column_index][i] += 1
         if (not page_range_dict[column_index][-1].has_capacity()):
-            page_range_dict[column_index].append(PageRange(MAX_PAGE_RANGE, self.page_range_count))
-            self.page_range_count += 1
+            page_range_dict[column_index].append(PageRange(MAX_PAGE_RANGE, self.page_range_index))
+            self.page_range_index += 1
         page_range_dict[column_index][-1].add_page(
-            Page(self.schema_encoding_index, self.num_all_columns, column_index, self.page_count))
-        self.page_count += 1
+            Page(self.schema_encoding_index, self.num_all_columns, column_index, self.page_index))
+        self.page_index += 1
 
     def __merge(self):
         print("merge is happening")

@@ -5,8 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c3c41835-c226-46b5-83f8-4e018deae482" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/lstore/bufferpool.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstore/bufferpool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lstore/page.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstore/page.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstore/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstore/config.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lstore/query.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstore/query.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lstore/table.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstore/table.py" afterDir="false" />
     </list>
