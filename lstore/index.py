@@ -1,4 +1,6 @@
 from BTrees.OOBTree import OOBTree
+import json
+
 
 """
 A data strucutre holding indices for various columns of a table. Key column should be indexd by default, other columns can be indexed through this object. Indices are usually B-Trees, but other data structures can be used as well.
@@ -57,3 +59,17 @@ class Index:
             self.base_page_indices[column_number] = None
         if (self.tail_page_indices[column_number] != None):
             self.tail_page_indices[column_number] = None
+
+    def serialize_oobtree(tree):
+        # Convert the OOBTree to a list of tuples (key, value) for serialization
+        items = list(tree.items())
+        return json.dumps(items)
+
+    def deserialize_oobtree(serialized_str):
+        # Deserialize the JSON string back to a list of tuples
+        items = json.loads(serialized_str)
+        # Reconstruct the OOBTree
+        tree = OOBTree()
+        for key, value in items:
+            tree[key] = value
+        return tree

@@ -1,5 +1,8 @@
 from lstore.config import *
 import struct
+import base64
+import os
+import json
 
 
 class Page:
@@ -73,6 +76,38 @@ class Page:
             value = None
         self.pin -= 1
         return value
+
+    def serialize(self):
+        # Convert the binary data to a base64 string for JSON compatibility
+        data_base64 = base64.b64encode(self.data).decode('utf-8')
+        # Create a dictionary of the object's data
+        obj_dict = {
+            'num_records': self.num_records,
+            'data': data_base64,
+            'schema_encoding_index': self.schema_encoding_index,
+            'num_col': self.num_col,
+            'column_index': self.column_index,
+            'page_index': self.page_index,
+            'pin': self.pin,
+            'dirty': self.dirty
+        }
+        # Serialize the dictionary to a JSON string
+        return json.dumps(obj_dict)
+
+    @staticmethod
+    def deserialize(serialized_str):
+        # Deserialize the JSON string back to a dictionary
+        obj_dict = json.loads(serialized_str)
+        # Decode the base64 string back to binary data
+        data = bytearray(base64.b64decode(obj_dict['data']))
+        # Reconstruct the Page object
+        page = Page(obj_dict['schema_encoding_index'], obj_dict['num_col'], obj_dict['column_index'],
+                    obj_dict['page_index'])
+        page.num_records = obj_dict['num_records']
+        page.data = data
+        page.pin = obj_dict['pin']
+        page.dirty = obj_dict['dirty']
+        return page
 
 
 class PageRange:
