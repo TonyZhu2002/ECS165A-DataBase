@@ -94,21 +94,19 @@ class Page:
         # Serialize the dictionary to a JSON string
         return json.dumps(obj_dict)
 
-    @staticmethod
-    def deserialize(serialized_str):
+    def deserialize(self, serialized_str):
         # Deserialize the JSON string back to a dictionary
         obj_dict = json.loads(serialized_str)
         # Decode the base64 string back to binary data
         data = bytearray(base64.b64decode(obj_dict['data']))
-        # Reconstruct the Page object
-        page = Page(obj_dict['schema_encoding_index'], obj_dict['num_col'], obj_dict['column_index'],
-                    obj_dict['page_index'])
-        page.num_records = obj_dict['num_records']
-        page.data = data
-        page.pin = obj_dict['pin']
-        page.dirty = obj_dict['dirty']
-        return page
 
+        self.schema_encoding_index = obj_dict['schema_encoding_index']
+        self.num_col = obj_dict['num_col']
+        self.column_index = obj_dict['column_index']
+        self.page_index = obj_dict['page_index']
+        self.pin = obj_dict['pin']
+        self.dirty = obj_dict['dirty']
+        
 
 class PageRange:
     def __init__(self, max_capacity, page_range_index):

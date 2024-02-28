@@ -4,6 +4,7 @@ from lstore.config import *
 from lstore.bufferpool import BufferPool
 from time import time
 import copy
+import json
 
 
 class Record:
@@ -64,6 +65,44 @@ class Table:
         for i in range(self.num_all_columns):
             if (i != self.key):
                 self.index.create_index(i)
+    
+    def serialize_table(self):
+        table_dict = {
+            'name': self.name,
+            'key': self.key,
+            'num_columns': self.num_columns,
+            'num_all_columns': self.num_all_columns,
+            'indirection_index': self.indirection_index,
+            'rid_index': self.rid_index,
+            'time_stamp_index': self.time_stamp_index,
+            'schema_encoding_index': self.schema_encoding_index,
+            'base_record_index': self.base_record_index,
+            'tail_record_index': self.tail_record_index,
+            'page_range_index': self.page_range_index,
+            'page_index': self.page_index,
+            'page_count_dict': self.page_count_dict,
+            'current_rid': self.current_rid
+        }
+        return json.dumps(table_dict)
+    
+    def deserialize_table(self, json_str):
+        table_dict = json.loads(json_str)
+        self.name = table_dict['name']
+        self.key = table_dict['key']
+        self.num_columns = table_dict['num_columns']
+        self.num_all_columns = table_dict['num_all_columns']
+        self.indirection_index = table_dict['indirection_index']
+        self.rid_index = table_dict['rid_index']
+        self.time_stamp_index = table_dict['time_stamp_index']
+        self.schema_encoding_index = table_dict['schema_encoding_index']
+        self.base_record_index = table_dict['base_record_index']
+        self.tail_record_index = table_dict['tail_record_index']
+        self.page_range_index = table_dict['page_range_index']
+        self.page_index = table_dict['page_index']
+        self.page_count_dict = table_dict['page_count_dict']
+        self.current_rid = table_dict['current_rid']
+
+
 
     '''
     # Write a column to the base page

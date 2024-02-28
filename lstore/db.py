@@ -42,6 +42,8 @@ class Database():
             table_path = os.path.join(path, table_name)
             if os.path.isdir(table_path):
                 # Initialize or clear existing table structure in memory
+                with open(table_path, 'r') as file:
+                    serialized_page = file.read()
                 table = self.create_table(table_name,5, 0)
 
                 for column_dir in os.listdir(table_path):
@@ -81,10 +83,14 @@ class Database():
             table_path = os.path.join(self.db_path, table_name)
             if not os.path.isdir(table_path):
                 os.makedirs(table_path)
+            
+            table_config_path = os.path.join(table_path, f"{table_name}_tab_config.txt")
+            with open(table_config_path, "w") as config_file:
+                config_file.write(table.serialize_table())
 
             # Iterate through each column
             for column_index in range(table.num_all_columns):
-                column_path = os.path.join(table_path, f"{column_index}th Column")
+                column_path = os.path.join(table_path, f"{column_index}")
                 if not os.path.isdir(column_path):
                     os.makedirs(column_path)
 
@@ -106,7 +112,7 @@ class Database():
 
                     # Serialize and write the pages
                     for page_range_index, page_range in page_range_dict.items():
-                        page_range_path = os.path.join(type_path, f"pagerange{page_range_index}")
+                        page_range_path = os.path.join(type_path, f"{page_range_index}")
                         if not os.path.isdir(page_range_path):
                             os.makedirs(page_range_path)
                         for individual_page_range in page_range:
