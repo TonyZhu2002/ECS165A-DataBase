@@ -26,10 +26,10 @@ class Query:
         """
 
         if (is_base_page):
-            page_range_dict = self.table.base_page_range_dict
+            page_range_dict = self.table.bufferpool.base_page_range_dict
             indices = self.table.index.base_page_indices
         else:
-            page_range_dict = self.table.tail_page_range_dict
+            page_range_dict = self.table.bufferpool.tail_page_range_dict
             indices = self.table.index.tail_page_indices
 
         page_range_list = page_range_dict[column_index]
@@ -38,6 +38,7 @@ class Query:
         page_range_index = page_index // MAX_PAGE_RANGE
         page_index_in_range = page_index % MAX_PAGE_RANGE
         page = page_range_list[page_range_index].get_page(page_index_in_range)
+        page.pin += 1
 
         old_value = page.modify_value(new_value, record_index)
         indices[column_index][old_value].remove(record_num)
@@ -45,6 +46,7 @@ class Query:
         if (new_value not in indices[column_index]):
             indices[column_index][new_value] = []
         indices[column_index][new_value].append(record_num)
+        page.pin -= 1
 
     def get_value(self, record_num: int, column_index: int, is_base_page=True) -> int:
         """
@@ -55,9 +57,9 @@ class Query:
         # :return: int                 #The value at the given record number and column index
         """
         if (is_base_page):
-            page_range_dict = self.table.base_page_range_dict
+            page_range_dict = self.table.bufferpool.base_page_range_dict
         else:
-            page_range_dict = self.table.tail_page_range_dict
+            page_range_dict = self.table.bufferpool.tail_page_range_dict
 
         page_range_list = page_range_dict[column_index]
         page_index = record_num // MAX_RECORD_PER_PAGE
@@ -74,40 +76,40 @@ class Query:
             result.append(self.get_value(record_num, i, is_base_page))
         return result
 
-    def traverse_table(self) -> list:
-        """
-        # Traverse the table and return all latest records
-        # :return: list               #The list of all latest records
-        """
-        num_base_record = 0
-        current_rid = self.table.current_rid
-        record_list = []
-
-        if (current_rid == 10000):
-            return [[]]
-        # print(current_rid)
-        for i in range(10000, current_rid):
-            current_record_list = []
-            tail_page_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
-            if (tail_page_rid_tree.has_key(i)):
-                continue  # Not a base record
-            num_base_record += 1
-            address_list = []
-            rid_dict = self.table.base_page_range_dict[self.table.rid_index]
-
-            for pagerange in rid_dict:
-                pagerange.get_primary_key_address(i, address_list)
-            if (len(address_list) == 0):
-                continue
-            primary_key = self.get_page_value(address_list[0])
-
-            target_record_list = self.select(primary_key, self.table.key, [1] * self.table.num_columns)
-            if (len(target_record_list) == 0):
-                continue
-            for column in target_record_list[0].columns:
-                current_record_list.append(column)
-            record_list.append(current_record_list)
-        return record_list
+    # def traverse_table(self) -> list:
+    #     """
+    #     # Traverse the table and return all latest records
+    #     # :return: list               #The list of all latest records
+    #     """
+    #     num_base_record = 0
+    #     current_rid = self.table.current_rid
+    #     record_list = []
+    #
+    #     if (current_rid == 10000):
+    #         return [[]]
+    #     # print(current_rid)
+    #     for i in range(10000, current_rid):
+    #         current_record_list = []
+    #         tail_page_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
+    #         if (tail_page_rid_tree.has_key(i)):
+    #             continue  # Not a base record
+    #         num_base_record += 1
+    #         address_list = []
+    #         rid_dict = self.table.bufferpool.base_page_range_dict[self.table.rid_index]
+    #
+    #         for pagerange in rid_dict:
+    #             pagerange.get_primary_key_address(i, address_list)
+    #         if (len(address_list) == 0):
+    #             continue
+    #         primary_key = self.get_page_value(address_list[0])
+    #
+    #         target_record_list = self.select(primary_key, self.table.key, [1] * self.table.num_columns)
+    #         if (len(target_record_list) == 0):
+    #             continue
+    #         for column in target_record_list[0].columns:
+    #             current_record_list.append(column)
+    #         record_list.append(current_record_list)
+    #     return record_list
 
     def delete(self, primary_key):
         """
@@ -153,7 +155,7 @@ class Query:
         rid = self.table.current_rid
         self.table.current_rid += 1
         time_stamp = int(time())
-        schema_encoding = '0' * (self.table.num_columns)
+        schema_encoding = '0' * self.table.num_columns
 
         data = list(columns) + [indirection, rid, time_stamp, schema_encoding]
         record = Record(rid, key, data)
@@ -346,7 +348,7 @@ class Query:
         """
          :param start_range: int         # Start of the key range to aggregate
          :param end_range: int           # End of the key range to aggregate
-         :param aggregate_columns: int  # Index of desired column to aggregate
+         :param aggregate_column_index: int  # Index of desired column to aggregate
          # this function is only called on the primary key.
          # Returns the summation of the given range upon success
          # Returns False if no record exists in the given range
@@ -388,8 +390,8 @@ class Query:
         """
            :param start_range: int         # Start of the key range to aggregate
            :param end_range: int           # End of the key range to aggregate
-           :param aggregate_columns: int  # Index of desired column to aggregate
-           :param relative_version: the relative version of the record you need to retreive.
+           :param aggregate_column_index: int  # Index of desired column to aggregate
+           :param relative_version: the relative version of the record you need to retrieve.
            # this function is only called on the primary key.
            # Returns the summation of the given range upon success
            # Returns False if no record exists in the given range
@@ -434,7 +436,7 @@ class Query:
 
     def increment(self, key, column):
         """
-        incremenets one column of the record
+        increments one column of the record
         this implementation should work if your select and update queries already work
         :param key: the primary of key of the record to increment
         :param column: the column to increment
