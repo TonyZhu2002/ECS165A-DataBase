@@ -44,6 +44,10 @@ class Index:
     # optional: Create index on specific column
     """
 
+    def recreate_index(self, column_number, tree, page_type):
+        page_dict = self.base_page_indices if page_type == "base" else self.tail_page_indices
+        page_dict[column_number] = tree
+        
     def create_index(self, column_number):
         if (self.base_page_indices[column_number] == None):
             self.base_page_indices[column_number] = OOBTree()

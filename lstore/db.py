@@ -42,9 +42,12 @@ class Database():
             table_path = os.path.join(path, table_name)
             if os.path.isdir(table_path):
                 # Initialize or clear existing table structure in memory
-                with open(table_path, 'r') as file:
-                    serialized_page = file.read()
-                table = self.create_table(table_name,5, 0)
+                table_config_path = os.path.join(table_path, f"{table_name}_tab_config.txt")
+                with open(table_config_path, "r") as config_file:
+                    serialized_table = config_file.read()
+                table_data = json.loads(serialized_table)
+                table = self.create_table(table_data['name'],table_data['num_columns'], table_data['key'])
+                table.deserialize_table(serialized_table)
 
                 for column_dir in os.listdir(table_path):
                     column_path = os.path.join(table_path, column_dir)
@@ -56,8 +59,7 @@ class Database():
                                 with open(tree_file_path, 'r') as file:
                                     serialized_tree = file.read()
                                 tree = deserialize_oobtree(serialized_tree)
-                                # Assuming you have a method to set the OOBTree for the column
-                                table.set_oobtree_for_column(column_dir, page_type, tree)
+                                table.index.recreate_index(column_dir, tree, page_type)
 
                                 for page_range_dir in os.listdir(page_type_path):
                                     page_range_path = os.path.join(page_type_path, page_range_dir)
