@@ -49,6 +49,8 @@ class Database():
                 table_data = json.loads(serialized_table)
                 table = self.create_table(table_data['name'],table_data['num_columns'], table_data['key'])
                 table.deserialize_table(serialized_table)
+                table.bufferpool.remove_redundant_page(table.num_all_columns)
+                
 
                 for column_dir in os.listdir(table_path):
                     column_path = os.path.join(table_path, column_dir)
@@ -65,6 +67,7 @@ class Database():
                                 for page_range_dir in os.listdir(page_type_path):
                                     page_range_path = os.path.join(page_type_path, page_range_dir)
                                     if os.path.isdir(page_range_path):
+                                        count = 0
                                         for page_file in os.listdir(page_range_path):
                                             page_file_path = os.path.join(page_range_path, page_file)
                                             with open(page_file_path, 'r') as file:
@@ -72,7 +75,9 @@ class Database():
                                             page_data = json.loads(serialized_page)
                                             page = Page(page_data['schema_encoding_index'], page_data['num_col'], page_data['column_index'], page_data['page_index'])
                                             page.deserialize(serialized_page)
-                                            table.bufferpool.remove_redundant_page(page_type, int(column_dir))
+                                            if (int(column_dir) == table.key and page_type == "tail"):
+                                                count += 1
+                                                print(count)
                                             table.bufferpool.add_page(page_type, int(column_dir), page, int(page_range_dir))
 
         # After loading, perform any necessary initializations or buffer pool population
@@ -116,16 +121,34 @@ class Database():
                     page_range_dict = table.bufferpool.base_page_range_dict if page_type == "base" else table.bufferpool.tail_page_range_dict
 
                     # Serialize and write the pages
-                    for page_range_index, page_range in page_range_dict.items():
+                    page_range_list = page_range_dict[column_index]
+
+                    for page_range_index in range(len(page_range_list)):
                         page_range_path = os.path.join(type_path, f"{page_range_index}")
                         if not os.path.isdir(page_range_path):
                             os.makedirs(page_range_path)
-                        for individual_page_range in page_range:
-                            for page_index, page in enumerate(individual_page_range.pages):
+                            for page_index, page in enumerate(page_range_list[page_range_index].pages):
                                 serialized_page = page.serialize()
                                 page_file_path = os.path.join(page_range_path, f"page{page_index}.txt")
                                 with open(page_file_path, "w") as file:
                                     file.write(serialized_page)
+
+                    # for page_index, page in enumerate(page_range_list.pages):
+                    #     serialized_page = page.serialize()
+                    #     page_file_path = os.path.join(page_range_path, f"page{page_index}.txt")
+                    #     with open(page_file_path, "w") as file:
+                    #         file.write(serialized_page)
+
+                    # for page_range_index, page_range in page_range_dict.items():
+                    #     page_range_path = os.path.join(type_path, f"{page_range_index}")
+                    #     if not os.path.isdir(page_range_path):
+                    #         os.makedirs(page_range_path)
+                    #     for individual_page_range in page_range:
+                    #         for page_index, page in enumerate(individual_page_range.pages):
+                    #             serialized_page = page.serialize()
+                    #             page_file_path = os.path.join(page_range_path, f"page{page_index}.txt")
+                    #             with open(page_file_path, "w") as file:
+                    #                 file.write(serialized_page)
 
         # Clear the buffer pool
         self.buffer_pool.clear()

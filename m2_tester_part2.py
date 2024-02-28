@@ -15,6 +15,14 @@ query = Query(grades_table)
 # dictionary for records to test the database: test directory
 records = {}
 
+# page = query.table.bufferpool.base_page_range_dict[0][0].pages[0]
+# for i in range(1000):
+#     print("value:", page.get_value(i))
+
+page_count_dict = grades_table.page_count_dict
+for key, value in page_count_dict.items():
+    print("key:", key, "value:", value)
+
 number_of_records = 1000
 number_of_aggregates = 100
 number_of_updates = 10

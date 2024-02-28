@@ -219,6 +219,7 @@ class Query:
                     primary_key = self.get_value(candidate, self.table.key, True)
                     old_value = self.get_value(candidate, search_key_index, True)
                     indirection = self.get_value(candidate, self.table.indirection_index, True)
+                    #print("indirection", indirection, "type", type(indirection))
                     tail_record_num = tail_rid_tree[indirection][0]
                     latest_value = self.get_value(tail_record_num, search_key_index, False)
                     data = []
@@ -473,6 +474,7 @@ class Query:
                 version_count += 1
 
                 this_indirection = next_indirection
+
                 tail_record_num = tail_rid_tree[next_indirection][0]
                 next_indirection = self.get_value(tail_record_num, self.table.indirection_index, False)
 

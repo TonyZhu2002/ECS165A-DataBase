@@ -5,8 +5,6 @@ class BufferPool:
         self.base_page_range_dict = {}
         self.tail_page_range_dict = {}
 
-
-
     def clear_bufferpool(self):
         self.base_page_range_dict.clear()
         self.tail_page_range_dict.clear()
@@ -19,6 +17,7 @@ class BufferPool:
             page_range_dict[column_index].append(PageRange(MAX_PAGE_RANGE, page_range_index))
         page_range_dict[column_index][-1].add_page(page)
 
-    def remove_redundant_page(self, page_type, column_index):
-        page_range_dict = self.base_page_range_dict if page_type == "base" else self.tail_page_range_dict
-        page_range_dict[column_index][0].pages = []
+    def remove_redundant_page(self, num_columns):
+        for i in range(num_columns):
+            self.base_page_range_dict[i][0].pages = []
+            self.tail_page_range_dict[i][0].pages = []

@@ -98,7 +98,7 @@ class Page:
         # Deserialize the JSON string back to a dictionary
         obj_dict = json.loads(serialized_str)
         # Decode the base64 string back to binary data
-        data = bytearray(base64.b64decode(obj_dict['data']))
+        self.data = bytearray(base64.b64decode(obj_dict['data']))
 
         self.schema_encoding_index = obj_dict['schema_encoding_index']
         self.num_col = obj_dict['num_col']
@@ -106,7 +106,11 @@ class Page:
         self.page_index = obj_dict['page_index']
         self.pin = obj_dict['pin']
         self.dirty = obj_dict['dirty']
-        
+        # if (self.column_index == 5):
+        #     for i in range(1024):
+        #         print(struct.unpack("i", self.data[i * 4: i * 4 + 4])[0])
+
+
 
 class PageRange:
     def __init__(self, max_capacity, page_range_index):
