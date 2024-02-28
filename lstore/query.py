@@ -1,6 +1,4 @@
 from lstore.table import Table, Record
-from lstore.index import Index
-from BTrees import OOBTree
 from lstore.config import *
 from copy import deepcopy
 from time import time
@@ -26,8 +24,8 @@ class Query:
          # :param column_index: int     #The index of the column
          # :param new_value: int        #The new value
         """
-        indices = None
-        
+
+
         if (is_base_page):
             page_range_dict = self.table.base_page_range_dict
             indices = self.table.index.base_page_indices
