@@ -2,6 +2,7 @@ from lstore.index import Index
 from lstore.page import Page, PageRange
 from lstore.config import *
 from lstore.bufferpool import BufferPool
+import json
 from time import time
 import copy
 
@@ -15,13 +16,13 @@ class Record:
 
 
 class Table:
-    """
-    :param name: string         #Table name
-    :param num_columns: int     #Number of Columns: all columns are integer
-    :param key: int             #Index of table key in columns
-    """
 
     def __init__(self, name, num_columns, key):
+        """
+        :param name: string         #Table name
+        :param num_columns: int     #Number of Columns: all columns are integer
+        :param key: int             #Index of table key in columns
+        """
         self.name = name
         self.key = key
         self.num_columns = num_columns
@@ -34,22 +35,8 @@ class Table:
         self.tail_record_index = 0
         self.page_range_index = 0
         self.page_index = 0
-
-        # Initialize the page range dictionary
-        # The key is the column index
-        # The value is a list of page ranges
-        # self.base_page_range_dict = {}
-        # self.tail_page_range_dict = {}
-
-        # Initialize the page count dictionary
-        # The key is the column index
-        # The value is a list of two integers [base_page_count, tail_page_count]
-        # base_page_count is the number of base pages for the column
-        # tail_page_count is the number of tail pages for the column
         self.page_count_dict = {}
-
         self.index = Index(self)
-
         # Initialize the current rid
         # rid increases by 1 for each record
         self.current_rid = 10000
@@ -65,13 +52,12 @@ class Table:
             if (i != self.key):
                 self.index.create_index(i)
 
-    '''
-    # Write a column to the base page
-    # :param record: Record     #The record to be written to the base page
-    # key: data 2rd column: 88 value: 
-    '''
-
     def write_base_record(self, record: Record):
+        '''
+        # Write a column to the base page
+        # :param record: Record     #The record to be written to the base page
+        # key: data 2rd column: 88 value:
+        '''
         columns = record.columns
         curr_page = None
         for i in range(len(columns)):
@@ -130,7 +116,49 @@ class Table:
         self.tail_record_index += 1
         curr_page.pin -= len(columns)
 
+    def serialize_table(self):
+        """
+        Serialize a Table object to a dictionary.
+        """
+        table_data = {
+            'name': self.name,
+            'key': self.key,
+            'num_columns': self.num_columns,
+            'num_all_columns': self.num_all_columns,
+            'indirection_index': self.indirection_index,
+            'rid_index': self.rid_index,
+            'time_stamp_index': self.time_stamp_index,
+            'schema_encoding_index': self.schema_encoding_index,
+            'base_record_index': self.base_record_index,
+            'tail_record_index': self.tail_record_index,
+            'page_range_index': self.page_range_index,
+            'page_index': self.page_index,
+            'page_count_dict': self.page_count_dict,
+            'current_rid': self.current_rid
+        }
+        return json.dumps(table_data)
 
+    def deserialize_table(self, serialized_str):
+        """
+        Deserialize a string back to a Table object.
+        """
+        table_data = json.loads(serialized_str)
+        # table = Table(table_data['name'], table_data['num_columns'], table_data['key'])
+        self.name = table_data['name']
+        self.num_columns = table_data['num_columns']
+        self.key = table_data['key']
+        self.num_all_columns = table_data['num_all_columns']
+        self.indirection_index = table_data['indirection_index']
+        self.rid_index = table_data['rid_index']
+        self.time_stamp_index = table_data['time_stamp_index']
+        self.schema_encoding_index = table_data['schema_encoding_index']
+        self.base_record_index = table_data['base_record_index']
+        self.tail_record_index = table_data['tail_record_index']
+        self.page_range_index = table_data['page_range_index']
+        self.page_index = table_data['page_index']
+        self.page_count_dict = table_data['page_count_dict']
+        self.current_rid = table_data['current_rid']
+        return table
 
     def __create_page(self, column_index, is_base_page=True):
         """

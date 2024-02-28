@@ -38,35 +38,35 @@ class Database():
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)  # Create directory if it doesn't exist
 
-        for table_name in os.listdir(path):
-            table_path = os.path.join(path, table_name)
-            if os.path.isdir(table_path):
-                # Initialize or clear existing table structure in memory
-                table = self.create_table(table_name,5, 0)
-
-                for column_dir in os.listdir(table_path):
-                    column_path = os.path.join(table_path, column_dir)
-                    if os.path.isdir(column_path):
-                        for page_type in ["base", "tail"]:
-                            page_type_path = os.path.join(column_path, page_type)
-                            if os.path.isdir(page_type_path):
-                                tree_file_path = os.path.join(page_type_path, f"{page_type}.txt")
-                                with open(tree_file_path, 'r') as file:
-                                    serialized_tree = file.read()
-                                tree = deserialize_oobtree(serialized_tree)
-                                # Assuming you have a method to set the OOBTree for the column
-                                table.set_oobtree_for_column(column_dir, page_type, tree)
-
-                                for page_range_dir in os.listdir(page_type_path):
-                                    page_range_path = os.path.join(page_type_path, page_range_dir)
-                                    if os.path.isdir(page_range_path):
-                                        for page_file in os.listdir(page_range_path):
-                                            page_file_path = os.path.join(page_range_path, page_file)
-                                            with open(page_file_path, 'r') as file:
-                                                serialized_page = file.read()
-                                            page = serialized_page.deserialize(serialized_page)
-                                            # Assuming you have a method to add the page back to the buffer pool
-                                            table.add_page_to_bufferpool(column_dir, page_type, page_range_dir, page)
+        # for table_name in os.listdir(path):
+        #     table_path = os.path.join(path, table_name)
+        #     if os.path.isdir(table_path):
+        #         # Initialize or clear existing table structure in memory
+        #         table = self.create_table(table_name,5, 0)
+        #
+        #         for column_dir in os.listdir(table_path):
+        #             column_path = os.path.join(table_path, column_dir)
+        #             if os.path.isdir(column_path):
+        #                 for page_type in ["base", "tail"]:
+        #                     page_type_path = os.path.join(column_path, page_type)
+        #                     if os.path.isdir(page_type_path):
+        #                         tree_file_path = os.path.join(page_type_path, f"{page_type}.txt")
+        #                         with open(tree_file_path, 'r') as file:
+        #                             serialized_tree = file.read()
+        #                         tree = deserialize_oobtree(serialized_tree)
+        #                         # Assuming you have a method to set the OOBTree for the column
+        #                         table.set_oobtree_for_column(column_dir, page_type, tree)
+        #
+        #                         for page_range_dir in os.listdir(page_type_path):
+        #                             page_range_path = os.path.join(page_type_path, page_range_dir)
+        #                             if os.path.isdir(page_range_path):
+        #                                 for page_file in os.listdir(page_range_path):
+        #                                     page_file_path = os.path.join(page_range_path, page_file)
+        #                                     with open(page_file_path, 'r') as file:
+        #                                         serialized_page = file.read()
+        #                                     page = serialized_page.deserialize(serialized_page)
+        #                                     # Assuming you have a method to add the page back to the buffer pool
+        #                                     table.add_page_to_bufferpool(column_dir, page_type, page_range_dir, page)
 
         # After loading, perform any necessary initializations or buffer pool population
 
@@ -87,6 +87,9 @@ class Database():
                 column_path = os.path.join(table_path, f"{column_index}th Column")
                 if not os.path.isdir(column_path):
                     os.makedirs(column_path)
+                table_config_path = os.path.join(table_path, f"{table_name}_tab_config.txt")
+                with open(table_config_path, "w") as config_file:
+                    config_file.write(table.serialize_table())
 
                 # Process both base and tail for each column
                 for page_type in ["base", "tail"]:
