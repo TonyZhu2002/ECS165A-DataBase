@@ -1,3 +1,4 @@
+from lstore.page import Page
 from lstore.table import Table
 import os
 from BTrees.OOBTree import OOBTree
@@ -55,11 +56,11 @@ class Database():
                         for page_type in ["base", "tail"]:
                             page_type_path = os.path.join(column_path, page_type)
                             if os.path.isdir(page_type_path):
-                                tree_file_path = os.path.join(page_type_path, f"{page_type}.txt")
+                                tree_file_path = os.path.join(page_type_path, f"{page_type}_index.txt")
                                 with open(tree_file_path, 'r') as file:
                                     serialized_tree = file.read()
                                 tree = deserialize_oobtree(serialized_tree)
-                                table.index.recreate_index(column_dir, tree, page_type)
+                                table.index.recreate_index(int(column_dir), tree, page_type)
 
                                 for page_range_dir in os.listdir(page_type_path):
                                     page_range_path = os.path.join(page_type_path, page_range_dir)
@@ -68,7 +69,10 @@ class Database():
                                             page_file_path = os.path.join(page_range_path, page_file)
                                             with open(page_file_path, 'r') as file:
                                                 serialized_page = file.read()
-                                            page = serialized_page.deserialize(serialized_page)
+                                            page_data = json.loads(serialized_page)
+                                            page = Page(page_data['schema_encoding_index'], page_data['num_col'], page_data['column_index'], page_data['page_index'])
+                                            page.deserialize(serialized_page)
+                                            table.bufferpool.remove_redundant_page(page_type, int(column_dir))
                                             table.bufferpool.add_page(page_type, int(column_dir), page, int(page_range_dir))
 
         # After loading, perform any necessary initializations or buffer pool population
@@ -154,7 +158,4 @@ class Database():
         """
         # Returns table with the passed name
         """
-        for table in self.tables:
-            if table.name == name:
-                return table
-        pass
+        return self.tables[name]

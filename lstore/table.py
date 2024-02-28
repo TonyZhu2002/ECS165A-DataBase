@@ -38,12 +38,14 @@ class Table:
         self.page_index = 0
         self.page_count_dict = {}
         self.index = Index(self)
+        self.is_first_read = True
         # Initialize the current rid
         # rid increases by 1 for each record
         self.current_rid = 10000
         self.bufferpool = BufferPool()
 
         # Initialize the page range list
+
         for i in range(self.num_all_columns):
             self.__create_page(i, True)
             self.__create_page(i, False)
@@ -68,7 +70,7 @@ class Table:
             'page_range_index': self.page_range_index,
             'page_index': self.page_index,
             'page_count_dict': self.page_count_dict,
-            'current_rid': self.current_rid
+            'current_rid': self.current_rid,
         }
         return json.dumps(table_dict)
     
@@ -197,7 +199,6 @@ class Table:
         self.page_index = table_data['page_index']
         self.page_count_dict = table_data['page_count_dict']
         self.current_rid = table_data['current_rid']
-        return table
 
     def __create_page(self, column_index, is_base_page=True):
         """
