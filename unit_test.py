@@ -80,7 +80,7 @@ print("Aggregate finished")
 
 
 # Part 2
-
+print("Part 2 Start")
 
 # create a query class for the grades table
 query = Query(grades_table)

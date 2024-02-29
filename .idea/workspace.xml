@@ -5,12 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c3c41835-c226-46b5-83f8-4e018deae482" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/ECS165A-DataBase.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/ECS165A-DataBase.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lstore/bufferpool.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstore/bufferpool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lstore/db.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstore/db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lstore/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstore/config.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lstore/table.py" beforeDir="false" afterPath="$PROJECT_DIR$/lstore/table.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/unit_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/unit_test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,6 +77,7 @@
       <workItem from="1708997357119" duration="5351000" />
       <workItem from="1709112520231" duration="615000" />
       <workItem from="1709114787518" duration="1366000" />
+      <workItem from="1709182293516" duration="3176000" />
     </task>
     <servers />
   </component>
@@ -97,16 +96,16 @@
     </option>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/ECS165A_DataBase$query.coverage" NAME="query Coverage Results" MODIFIED="1707883731521" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lstore" />
-    <SUITE FILE_PATH="coverage/ECS165A_DataBase$exam_tester_m2_part1.coverage" NAME="exam_tester_m2_part1 Coverage Results" MODIFIED="1709115684913" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ECS165A_DataBase$query.coverage" NAME="query Coverage Results" MODIFIED="1709116361006" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lstore" />
+    <SUITE FILE_PATH="coverage/ECS165A_DataBase$exam_tester_m2_part1.coverage" NAME="exam_tester_m2_part1 Coverage Results" MODIFIED="1709120852670" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ECS165A_DataBase$__main__.coverage" NAME="__main__ Coverage Results" MODIFIED="1708144466808" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ECS165A_DataBase$m1_tester.coverage" NAME="m1_tester Coverage Results" MODIFIED="1708072534327" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ECS165A_DataBase$exam_tester_m1.coverage" NAME="exam_tester_m1 Coverage Results" MODIFIED="1707886041067" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ECS165A_DataBase$GUI.coverage" NAME="GUI Coverage Results" MODIFIED="1709008487896" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/ECS165A_DataBase$exam_tester_m2_part2.coverage" NAME="exam_tester_m2_part2 Coverage Results" MODIFIED="1709115733416" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/ECS165A_DataBase$unittest2.coverage" NAME="unittest2 Coverage Results" MODIFIED="1709078443145" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/ECS165A_DataBase$unit_test.coverage" NAME="unit_test Coverage Results" MODIFIED="1709080841069" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ECS165A_DataBase$exam_tester_m2_part2.coverage" NAME="exam_tester_m2_part2 Coverage Results" MODIFIED="1709120858191" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ECS165A_DataBase$page.coverage" NAME="page Coverage Results" MODIFIED="1709099546870" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lstore" />
+    <SUITE FILE_PATH="coverage/ECS165A_DataBase$unittest2.coverage" NAME="unittest2 Coverage Results" MODIFIED="1709118001030" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ECS165A_DataBase$unit_test.coverage" NAME="unit_test Coverage Results" MODIFIED="1709196090750" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ECS165A_DataBase$.coverage" NAME=" Coverage Results" MODIFIED="1709015528547" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ECS165A_DataBase$db.coverage" NAME="db Coverage Results" MODIFIED="1709011327331" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lstore" />
   </component>

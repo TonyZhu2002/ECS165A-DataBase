@@ -43,7 +43,7 @@ class Table:
         # rid increases by 1 for each record
         self.current_rid = 10000
         self.bufferpool = BufferPool()
-        
+
         self.merge_range = 0
         self.tps = 0
 
@@ -57,7 +57,7 @@ class Table:
         for i in range(self.num_all_columns):
             if (i != self.key):
                 self.index.create_index(i)
-    
+
     def serialize_table(self):
         table_dict = {
             'name': self.name,
@@ -74,9 +74,11 @@ class Table:
             'page_index': self.page_index,
             'page_count_dict': self.page_count_dict,
             'current_rid': self.current_rid,
+            'merge_range': self.merge_range,
+            'tps': self.tps,
         }
         return json.dumps(table_dict)
-    
+
     def deserialize_table(self, json_str):
         table_dict = json.loads(json_str)
         self.name = table_dict['name']
@@ -93,8 +95,8 @@ class Table:
         self.page_index = table_dict['page_index']
         self.page_count_dict = table_dict['page_count_dict']
         self.current_rid = table_dict['current_rid']
-
-
+        self.merge_range = table_dict['merge_range']
+        self.tps = table_dict['tps']
 
     def write_base_record(self, record: Record):
         '''
@@ -233,12 +235,12 @@ class Table:
         while (self.merge_range - self.tps) > MERGE_TRIGGER:
             merge_range_start = copy.deepcopy(self.tps)
             merge_range_end = copy.deepcopy(self.merge_range)
-            
+
             for tail_record_num in range(merge_range_start, merge_range_end):
                 tail_indirection = self.bufferpool_get_value(tail_record_num, self.indirection_index, False)
                 if self.index.base_page_indices[self.rid_index].has_key(tail_indirection):
-                # if the current tail record is the latest update for some base record
-                # we make the consolidated base record and store it normally
+                    # if the current tail record is the latest update for some base record
+                    # we make the consolidated base record and store it normally
                     base_rid_tree = self.index.base_page_indices[self.rid_index]
                     original_base_record_num = base_rid_tree[tail_indirection][0]
                     copy_columns = []
@@ -253,7 +255,7 @@ class Table:
                     self.current_rid += 1
                     copy_time_stamp = int(time())
                     copy_se = '0' * self.num_columns
-                    
+
                     copy_data = copy_columns + [copy_indirection, copy_rid, copy_time_stamp, copy_se]
                     copy_record = Record(copy_rid, copy_columns[self.key], copy_data)
                     self.write_base_record(copy_record)
@@ -265,7 +267,7 @@ class Table:
                     for j in range(len(tail_se)):
                         search_value_original = self.bufferpool_get_value(copy_obrn, j, True)
                         search_range_original = self.index.base_page_indices[j][search_value_original]
-                        for k in search_range_original: # this should be a list
+                        for k in search_range_original:  # this should be a list
                             if k == copy_obrn:
                                 k = -1
                                 break
@@ -284,10 +286,10 @@ class Table:
                             if n == copy_cbrn:
                                 n = -1
                                 break
-            
+
             # Update tps
             self.tps = merge_range_end
-                
+
     def bufferpool_get_value(self, record_num: int, column_index: int, is_base_page=True) -> int:
         """
         # Internal Method
