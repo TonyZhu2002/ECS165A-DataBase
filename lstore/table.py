@@ -43,6 +43,9 @@ class Table:
         # rid increases by 1 for each record
         self.current_rid = 10000
         self.bufferpool = BufferPool()
+        
+        self.merge_range = 0
+        self.tps = 0
 
         # Initialize the page range list
 
@@ -155,6 +158,7 @@ class Table:
             tail_tree[columns[i]].append(self.tail_record_index)
 
         self.tail_record_index += 1
+        self.merge_range += 1
         curr_page.pin -= len(columns)
 
     def serialize_table(self):
@@ -226,5 +230,114 @@ class Table:
         self.page_index += 1
 
     def __merge(self):
-        print("merge is happening")
-        pass
+        while (self.merge_range - self.tps) > MERGE_TRIGGER:
+            merge_range_start = copy.deepcopy(self.tps)
+            merge_range_end = copy.deepcopy(self.merge_range)
+            
+            for tail_record_num in range(merge_range_start, merge_range_end):
+                tail_indirection = self.bufferpool_get_value(tail_record_num, self.indirection_index, False)
+                if self.index.base_page_indices[self.rid_index].has_key(tail_indirection):
+                # if the current tail record is the latest update for some base record
+                # we make the consolidated base record and store it normally
+                    base_rid_tree = self.index.base_page_indices[self.rid_index]
+                    original_base_record_num = base_rid_tree[tail_indirection][0]
+                    copy_columns = []
+                    tail_se = self.bufferpool_get_value(tail_record_num, self.schema_encoding_index, False)
+                    for i in range(len(tail_se)):
+                        if tail_se[i] == '0':
+                            copy_columns.append(self.bufferpool_get_value(original_base_record_num, i, True))
+                        elif tail_se[i] == '1':
+                            copy_columns.append(self.bufferpool_get_value(tail_record_num, i, False))
+                    copy_indirection = 0
+                    copy_rid = self.current_rid
+                    self.current_rid += 1
+                    copy_time_stamp = int(time())
+                    copy_se = '0' * self.num_columns
+                    
+                    copy_data = copy_columns + [copy_indirection, copy_rid, copy_time_stamp, copy_se]
+                    copy_record = Record(copy_rid, copy_columns[self.key], copy_data)
+                    self.write_base_record(copy_record)
+                    # Now we adjust the pointers (i.e. record_num)
+                    copy_base_record_num = base_rid_tree[copy_rid][0]
+                    copy_obrn = copy.deepcopy(original_base_record_num)
+                    copy_cbrn = copy.deepcopy(copy_base_record_num)
+                    # Real Data Adjustment
+                    for j in range(len(tail_se)):
+                        search_value_original = self.bufferpool_get_value(copy_obrn, j, True)
+                        search_range_original = self.index.base_page_indices[j][search_value_original]
+                        for k in search_range_original: # this should be a list
+                            if k == copy_obrn:
+                                k = -1
+                                break
+                        # assume adjustment successfully finishs
+                        search_value_copy = self.bufferpool_get_value(copy_cbrn, j, True)
+                        search_range_copy = self.index.base_page_indices[j][search_value_copy]
+                        for l in search_range_copy:
+                            if l == copy_cbrn:
+                                l = copy_obrn
+                                break
+                    # Copy's Metadata Adjustment
+                    for m in range(self.indirection_index, self.schema_encoding_index + 1):
+                        search_value_copy_meta = self.bufferpool_get_value(copy_cbrn, m, True)
+                        search_range_copy_meta = self.index.base_page_indices[m][search_value_copy_meta]
+                        for n in search_range_copy_meta:
+                            if n == copy_cbrn:
+                                n = -1
+                                break
+            
+            # Update tps
+            self.tps = merge_range_end
+                
+    def bufferpool_get_value(self, record_num: int, column_index: int, is_base_page=True) -> int:
+        """
+        # Internal Method
+        # Get the value at the given record number and column index
+        # :param record_num: int       #The record number
+        # :param column_index: int     #The index of the column
+        # :return: int                 #The value at the given record number and column index
+        """
+        if (is_base_page):
+            page_range_dict = self.bufferpool.base_page_range_dict
+        else:
+            page_range_dict = self.bufferpool.tail_page_range_dict
+
+        page_range_list = page_range_dict[column_index]
+        page_index = record_num // MAX_RECORD_PER_PAGE
+        record_index = record_num % MAX_RECORD_PER_PAGE
+        page_range_index = page_index // MAX_PAGE_RANGE
+        page_index_in_range = page_index % MAX_PAGE_RANGE
+        page = page_range_list[page_range_index].get_page(page_index_in_range)
+
+        return page.get_value(record_index)
+
+    def bufferpool_modify_value(self, record_num: int, column_index: int, new_value: int, is_base_page=True):
+        """
+         # Internal Method
+         # Modify the value at the given record number and column index
+         # :param record_num: int       #The record number
+         # :param column_index: int     #The index of the column
+         # :param new_value: int        #The new value
+        """
+
+        if (is_base_page):
+            page_range_dict = self.bufferpool.base_page_range_dict
+            indices = self.index.base_page_indices
+        else:
+            page_range_dict = self.bufferpool.tail_page_range_dict
+            indices = self.index.tail_page_indices
+
+        page_range_list = page_range_dict[column_index]
+        page_index = record_num // MAX_RECORD_PER_PAGE
+        record_index = record_num % MAX_RECORD_PER_PAGE
+        page_range_index = page_index // MAX_PAGE_RANGE
+        page_index_in_range = page_index % MAX_PAGE_RANGE
+        page = page_range_list[page_range_index].get_page(page_index_in_range)
+        page.pin += 1
+
+        old_value = page.modify_value(new_value, record_index)
+        indices[column_index][old_value].remove(record_num)
+
+        if (new_value not in indices[column_index]):
+            indices[column_index][new_value] = []
+        indices[column_index][new_value].append(record_num)
+        page.pin -= 1
