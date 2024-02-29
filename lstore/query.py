@@ -76,41 +76,6 @@ class Query:
             result.append(self.get_value(record_num, i, is_base_page))
         return result
 
-    # def traverse_table(self) -> list:
-    #     """
-    #     # Traverse the table and return all latest records
-    #     # :return: list               #The list of all latest records
-    #     """
-    #     num_base_record = 0
-    #     current_rid = self.table.current_rid
-    #     record_list = []
-    #
-    #     if (current_rid == 10000):
-    #         return [[]]
-    #     # print(current_rid)
-    #     for i in range(10000, current_rid):
-    #         current_record_list = []
-    #         tail_page_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
-    #         if (tail_page_rid_tree.has_key(i)):
-    #             continue  # Not a base record
-    #         num_base_record += 1
-    #         address_list = []
-    #         rid_dict = self.table.bufferpool.base_page_range_dict[self.table.rid_index]
-    #
-    #         for pagerange in rid_dict:
-    #             pagerange.get_primary_key_address(i, address_list)
-    #         if (len(address_list) == 0):
-    #             continue
-    #         primary_key = self.get_page_value(address_list[0])
-    #
-    #         target_record_list = self.select(primary_key, self.table.key, [1] * self.table.num_columns)
-    #         if (len(target_record_list) == 0):
-    #             continue
-    #         for column in target_record_list[0].columns:
-    #             current_record_list.append(column)
-    #         record_list.append(current_record_list)
-    #     return record_list
-
     def delete(self, primary_key):
         """
         # internal Method

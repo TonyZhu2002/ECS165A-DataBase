@@ -44,7 +44,7 @@ class Database():
             if os.path.isdir(table_path):
                 # Initialize or clear existing table structure in memory
                 table_config_path = os.path.join(table_path, f"{table_name}_tab_config.txt")
-                with open(table_config_path, "r") as config_file:
+                with open(table_config_path, "rb") as config_file:
                     serialized_table = config_file.read()
                 table_data = json.loads(serialized_table)
                 table = self.create_table(table_data['name'],table_data['num_columns'], table_data['key'])
@@ -59,7 +59,7 @@ class Database():
                             page_type_path = os.path.join(column_path, page_type)
                             if os.path.isdir(page_type_path):
                                 tree_file_path = os.path.join(page_type_path, f"{page_type}_index.txt")
-                                with open(tree_file_path, 'r') as file:
+                                with open(tree_file_path, 'rb') as file:
                                     serialized_tree = file.read()
                                 tree = deserialize_oobtree(serialized_tree)
                                 table.index.recreate_index(int(column_dir), tree, page_type)
@@ -70,7 +70,7 @@ class Database():
                                         count = 0
                                         for page_file in os.listdir(page_range_path):
                                             page_file_path = os.path.join(page_range_path, page_file)
-                                            with open(page_file_path, 'r') as file:
+                                            with open(page_file_path, 'rb') as file:
                                                 serialized_page = file.read()
                                             page_data = json.loads(serialized_page)
                                             page = Page(page_data['schema_encoding_index'], page_data['num_col'], page_data['column_index'], page_data['page_index'])
