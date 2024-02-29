@@ -77,7 +77,7 @@ class Database():
                                             page.deserialize(serialized_page)
                                             if (int(column_dir) == table.key and page_type == "tail"):
                                                 count += 1
-                                                print(count)
+                                                # print(count)
                                             table.bufferpool.add_page(page_type, int(column_dir), page, int(page_range_dir))
 
         # After loading, perform any necessary initializations or buffer pool population

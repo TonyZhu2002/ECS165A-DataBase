@@ -94,9 +94,9 @@ class Query:
             self.modify_value(base_num_record, self.table.schema_encoding_index, schema_encoding)
             self.update(primary_key, *null_columns)
             # Update the latest update record's schema encoding
-            this_indirection = self.get_value(base_num_record, self.table.indirection_index, True)
-            tail_num_record = tail_rid_tree[this_indirection][0]
-            self.modify_value(tail_num_record, self.table.schema_encoding_index, schema_encoding, False)
+            # this_indirection = self.get_value(base_num_record, self.table.indirection_index, True)
+            # tail_num_record = tail_rid_tree[this_indirection][0]
+            # self.modify_value(tail_num_record, self.table.schema_encoding_index, schema_encoding, False)
             return True
         else:
             return False
@@ -184,7 +184,6 @@ class Query:
                     primary_key = self.get_value(candidate, self.table.key, True)
                     old_value = self.get_value(candidate, search_key_index, True)
                     indirection = self.get_value(candidate, self.table.indirection_index, True)
-                    #print("indirection", indirection, "type", type(indirection))
                     tail_record_num = tail_rid_tree[indirection][0]
                     latest_value = self.get_value(tail_record_num, search_key_index, False)
                     data = []
