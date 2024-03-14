@@ -27,6 +27,7 @@ class Database():
         self.tables = {}
         self.db_path = ""
         self.buffer_pool = []
+        self.log = []
         # pass
 
 

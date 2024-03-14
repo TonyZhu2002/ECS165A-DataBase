@@ -1,6 +1,7 @@
 from lstore.table import Table, Record
 from lstore.index import Index
 from db import Database
+from bufferpool import BufferPool
 
 
 class Transaction:
@@ -10,7 +11,7 @@ class Transaction:
         # Creates a transaction object.
         """
         self.queries = []
-        self.db = Database
+        self.old_value_keeper = []
         pass
 
     def add_query(self, query, table, *args):
@@ -21,7 +22,6 @@ class Transaction:
         # t = Transaction()
         # t.add_query(q.update, grades_table, 0, *[None, 1, None, 2, None])
         """
-
         self.queries.append((query, args))
         # use grades_table for aborting
 
@@ -32,13 +32,18 @@ class Transaction:
             # If the query has failed the transaction should abort
             if result == False:
                 return self.abort()
+            self.old_value_keeper.append(self.rollback_method(query, args))
         return self.commit()
-
+    def rollback_method(self, function, *args):
+        pass
+        # Assume it returns a tuple similar to add_query, but contains rollback function with necessary arguments.
     def abort(self):
         # TODO: do roll-back and any other necessary operations
+        for query, args in self.old_value_keeper:
+            query(*args)
+        self.old_value_keeper.clear()
         return False
 
     def commit(self):
         # TODO: commit to database
-        self.db.close()  # But without clearing the bufferpool
         return True
