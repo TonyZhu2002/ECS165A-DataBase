@@ -1,6 +1,7 @@
 from lstore.table import Table, Record
 from lstore.index import Index
 from db import Database
+from query import Query
 from bufferpool import BufferPool
 
 
@@ -40,13 +41,11 @@ class Transaction:
     def rollback_method(self, function, *args):
         query_name = function.__name__
         if query_name == "insert":
-            return self.queries.delete, args
-            pass
+            return (Query(self.table).delete, args)
         elif query_name == "delete":
-            pass
+            return (Query(self.table).insert, args)
         elif query_name == "update":
-            pass
-        pass
+            return (Query(self.table).update, args)
 
         # Assume it returns a tuple similar to add_query, but contains rollback function with necessary arguments.
     def abort(self):
