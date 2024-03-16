@@ -152,15 +152,8 @@ class Query:
         # Assume that select will never be called on a key that doesn't exist
         """
 
-        base_target_tree = self.table.index.base_page_indices[search_key_index]
-        base_target_list = base_target_tree[search_key]
-        tail_target_tree = self.table.index.tail_page_indices[search_key_index]
-        tail_target_list = tail_target_tree[search_key]
         base_se_tree = self.table.index.base_page_indices[self.table.schema_encoding_index]
-        base_indirection_tree = self.table.index.base_page_indices[self.table.indirection_index]
-        base_rid_tree = self.table.index.base_page_indices[self.table.rid_index]
         tail_rid_tree = self.table.index.tail_page_indices[self.table.rid_index]
-        rid_list = []
         result = []
 
         for se, num_list in base_se_tree.items():
