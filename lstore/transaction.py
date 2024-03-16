@@ -33,7 +33,7 @@ class Transaction:
 
     # If you choose to implement this differently this method must still return True if transaction commits or False on abort
     def run(self):
-        self.old_buffer_pool = deepcopy(self.table.buffer_pool)
+        self.old_buffer_pool = deepcopy(self.table.bufferpool)
         self.old_index = deepcopy(self.table.index)
         for query, args in self.queries:
             result = query(*args)
@@ -48,7 +48,7 @@ class Transaction:
         # TODO: do roll-back and any other necessary operations
         # for query, args in reversed(self.old_value_keeper):
         #     query(*args)
-        self.table.buffer_pool = deepcopy(self.old_buffer_pool)
+        self.table.bufferpool = deepcopy(self.old_buffer_pool)
         self.table.index = deepcopy(self.old_index)
         # self.old_value_keeper.clear()
         return False
