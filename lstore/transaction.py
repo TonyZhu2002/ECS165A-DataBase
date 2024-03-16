@@ -45,7 +45,11 @@ class Transaction:
         elif query_name == "delete":
             return (Query(self.table).insert, args)
         elif query_name == "update":
-            return (Query(self.table).update, args)
+            primary_key = args[0]
+            recover_col = []
+            for column_index in range(self.table.num_columns):
+                pass
+            return (Query(self.table).update, [args[0], recover_col])
 
         # Assume it returns a tuple similar to add_query, but contains rollback function with necessary arguments.
     def abort(self):
