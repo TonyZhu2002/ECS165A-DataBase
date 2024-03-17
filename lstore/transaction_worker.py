@@ -2,18 +2,22 @@ from lstore.table import Table, Record
 from lstore.index import Index
 import threading
 
-
-class TransactionWorker():
+class TransactionWorker(threading.Thread):
     """
     # Creates a transaction worker object.
     """
 
-    def __init__(self, transactions=[]):
+    # def __init__(self, transactions=[]):
         # self.stats = []
         # self.transactions = transactions
         # self.result = 0
-        self.transactions = transactions
+        # self.transactions = transactions
+        # self.threads = []
+    
+    def __init__(self, transactions=[]):
         self.threads = []
+        threading.Thread.__init__(self)
+        self.transactions = transactions
 
     def add_transaction(self, t):
         """
@@ -22,12 +26,16 @@ class TransactionWorker():
         # self.transactions.append(t)
         self.transactions.append(t)
 
+    # def run(self):
+    #     # Create and start a thread for each transaction
+    #     for transaction in self.transactions:
+    #         thread = threading.Thread(target=transaction.run)
+    #         self.threads.append(thread)
+    #         thread.start()
+    
     def run(self):
-        # Create and start a thread for each transaction
         for transaction in self.transactions:
-            thread = threading.Thread(target=transaction.run)
-            self.threads.append(thread)
-            thread.start()
+            transaction.run()
 
     def join(self):
         """

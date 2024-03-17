@@ -4,7 +4,28 @@ from lstore.db import Database
 from lstore.query import Query
 from lstore.bufferpool import BufferPool
 from copy import deepcopy
+import threading
 
+class LockManager:
+    
+    def __init__(self):
+        self.locks = {}
+        self.locks_mutex = threading.Lock()
+
+    def acquire_lock(self, record_id):
+        with self.locks_mutex:
+            if record_id in self.locks and self.locks[record_id].locked():
+                return False  # Lock is already held, cannot acquire it now
+            if record_id not in self.locks:
+                self.locks[record_id] = threading.Lock()
+            self.locks[record_id].acquire()
+            return True
+
+    def release_lock(self, record_id):
+        with self.locks_mutex:
+            if record_id in self.locks:
+                self.locks[record_id].release()
+                
 
 class Transaction:
 
@@ -32,16 +53,35 @@ class Transaction:
         # use grades_table for aborting
 
     # If you choose to implement this differently this method must still return True if transaction commits or False on abort
+    # def run(self):
+    #     self.old_buffer_pool = deepcopy(self.table.bufferpool)
+    #     self.old_index = deepcopy(self.table.index)
+    #     for query, args in self.queries:
+    #         result = query(*args)
+    #         # If the query has failed the transaction should abort
+    #         if result == False:
+    #             return self.abort()
+    #         # self.old_value_keeper.append(self.rollback_method(query, args))
+    #     return self.commit()
+    
     def run(self):
-        self.old_buffer_pool = deepcopy(self.table.bufferpool)
-        self.old_index = deepcopy(self.table.index)
+        
+        global lock_manager
+        lock_manager = LockManager()
+        # Try to acquire locks for all operations first
         for query, args in self.queries:
-            result = query(*args)
-            # If the query has failed the transaction should abort
-            if result == False:
+            if not lock_manager.acquire_lock(args[0]):  # Assuming args[0] is record_id
                 return self.abort()
-            # self.old_value_keeper.append(self.rollback_method(query, args))
-        return self.commit()
+
+        # Proceed with operations if all locks are acquired
+        try:
+            for query, args in self.queries:
+                query(*args)
+            return self.commit()
+        finally:
+            # Release locks
+            for query, args in self.queries:
+                lock_manager.release_lock(args[0])
         
         
     def abort(self):
