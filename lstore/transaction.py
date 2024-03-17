@@ -70,6 +70,8 @@ class Transaction:
         
         global lock_manager
         lock_manager = LockManager()
+        self.old_buffer_pool = deepcopy(self.table.bufferpool)
+        self.old_index = deepcopy(self.table.index)
         # Try to acquire locks for all operations first
         for query, args in self.queries:
             if not lock_manager.acquire_lock(args[0]):  # Assuming args[0] is record_id

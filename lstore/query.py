@@ -437,4 +437,3 @@ class Query:
 
             return version_count
 
-        pass
