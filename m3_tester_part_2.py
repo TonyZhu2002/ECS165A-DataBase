@@ -89,7 +89,7 @@ for key in keys:
             print('select error on primary key', key, ':', result, ', correct:', correct)
             score -= 1
     except:
-        print('Record Not found', key)
+        #print('Record Not found', key)
         score -= 1
 print('Score', score, '/', len(keys))
 

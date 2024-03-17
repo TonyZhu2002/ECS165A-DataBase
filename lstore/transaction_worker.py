@@ -35,6 +35,7 @@ class TransactionWorker(threading.Thread):
     
     def run(self):
         for transaction in self.transactions:
+            # print("running transaction")
             transaction.run()
 
     def join(self):

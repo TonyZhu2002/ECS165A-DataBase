@@ -13,6 +13,7 @@ class LockManager:
         self.locks_mutex = threading.Lock()
 
     def acquire_lock(self, record_id):
+        # print("Acquiring lock for record_id: ", record_id)
         with self.locks_mutex:
             if record_id in self.locks and self.locks[record_id].locked():
                 return False  # Lock is already held, cannot acquire it now
@@ -22,6 +23,7 @@ class LockManager:
             return True
 
     def release_lock(self, record_id):
+        # print("Releasing lock for record_id: ", record_id)
         with self.locks_mutex:
             if record_id in self.locks:
                 self.locks[record_id].release()
